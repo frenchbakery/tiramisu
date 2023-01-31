@@ -41,6 +41,11 @@ copy_files:
 shell:
 	ssh $(USER)@$(HOST)
 
+start:
+	make copy_files
+	make remote_build
+	make remote_start
+
 mount:
 	sshfs -o allow_other access@raspberrypi.local:/ /media/melektron/kipr_mounts/root_mount
 
