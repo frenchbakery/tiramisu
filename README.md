@@ -16,7 +16,11 @@ The dev template is the development environment we use to write programms for th
 
 To get started developing for the Wombat using this template, either create a fork or an independent copy of the repository and clone it to your machine. A fork offers the benefit of allowing updates with changes from the base repo, in case new features are added to the environment.
 
-Before opening the folder, make sure you have the VSCode Dev Containers extension and docker installed according to the [installation manual](https://code.visualstudio.com/docs/devcontainers/containers). Then use the VSCode command ```Dev Containers: Open Folder in Container ...``` and select the cloned repository folder. The first time this is done, it will download the container base image and install the development environment and compiler. Then it will open the folder inside the container, like connecting to any remote VSCode server. Every time opening the folder after that, the container is already installed and you will immediately be connected to it.
+Before opening the folder, make sure you have the VSCode Dev Containers extension and docker installed according to the [installation manual](https://code.visualstudio.com/docs/devcontainers/containers). Then use the VSCode command 
+
+```Dev Containers: Open Folder in Container ...```
+
+and select the cloned repository folder. The first time this is done, it will download the container base image and install the development environment and compiler. Then it will open the folder inside the container, like connecting to any remote VSCode server. Every time opening the folder after that, the container is already installed and you will immediately be connected to it.
 
 You can now start creating your code inside the src folder! Any header-only dependencies can be added to the include folder. These will be copied and included in the compilation (Note: the devinclude folder is not supposed to be modified, it is not included in the compilation).
 
