@@ -9,7 +9,7 @@ CFLAGS = -g -I$(INCLUDE_DIR) -I$(SRC_DIR)
 LIBS = -lpthread -lwallaby
 
 USER = access
-HOST = 10.42.0.149
+HOST = 192.168.125.1
 
 SOURCES = $(shell find $(SRC_DIR) -name '*.cpp')
 OBJECTS_TEMP = $(patsubst %.cpp,%.o,$(SOURCES))
@@ -34,7 +34,7 @@ remote_build:
 
 copy_files:
 	ssh $(USER)@$(HOST) "rm -rf projects/$(WORKSPACE_NAME)/* && mkdir -p projects/$(WORKSPACE_NAME)/$(SRC_DIR) && mkdir -p projects/$(WORKSPACE_NAME)/$(INCLUDE_DIR)"
-	scp -r ../$(WORKSPACE_NAME)/$(SRC_DIR) $(USER)@$(HOST):projects/$(WORKSPACE_NAME)/$(SRC_DIR)
+	scp -r ../$(WORKSPACE_NAME)/$(SRC_DIR) $(USER)@$(HOST):projects/$(WORKSPACE_NAME)/
 	scp -r ../$(WORKSPACE_NAME)/$(INCLUDE_DIR) $(USER)@$(HOST):projects/$(WORKSPACE_NAME)/$(INCLUDE_DIR)
 	scp -r ../$(WORKSPACE_NAME)/Makefile $(USER)@$(HOST):projects/$(WORKSPACE_NAME)/Makefile
 
