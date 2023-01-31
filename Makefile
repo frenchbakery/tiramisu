@@ -41,7 +41,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 
 # run main binary remote target
 remote_start: 
-	ssh $(USER)@$(HOST) "bash -c \"cd projects/$(WORKSPACE_NAME) && $(RUN_DIR)/main\""
+	ssh $(USER)@$(HOST) "bash -c \"cd projects/$(WORKSPACE_NAME) && sudo $(RUN_DIR)/main\""
 
 # envoke build on remote target
 remote_build:
@@ -53,6 +53,7 @@ copy_files:
 	scp -r ../$(WORKSPACE_NAME)/$(SRC_DIR) $(USER)@$(HOST):projects/$(WORKSPACE_NAME)/
 	scp -r ../$(WORKSPACE_NAME)/$(INCLUDE_DIR) $(USER)@$(HOST):projects/$(WORKSPACE_NAME)/$(INCLUDE_DIR)
 	scp -r ../$(WORKSPACE_NAME)/Makefile $(USER)@$(HOST):projects/$(WORKSPACE_NAME)/Makefile
+	scp -r ../$(WORKSPACE_NAME)/env.mk $(USER)@$(HOST):projects/$(WORKSPACE_NAME)/env.mk
 
 # open shell on remote target
 shell:
