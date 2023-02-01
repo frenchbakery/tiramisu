@@ -14,7 +14,7 @@ WORKSPACE_NAME = $(shell basename ${PWD})
 
 # C++ configuration
 CC = g++
-CFLAGS = -g -I$(INCLUDE_DIR) -I$(SRC_DIR)
+CFLAGS = -g -I$(INCLUDE_DIR) -I$(SRC_DIR) -std=c++11
 LIBS = -lpthread -lwallaby
 
 # files and compliation results

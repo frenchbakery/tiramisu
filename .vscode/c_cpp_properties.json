@@ -9,8 +9,8 @@
             ],
             "defines": [],
             "compilerPath": "/usr/bin/aarch64-linux-gnu-g++",
-            "cStandard": "gnu17",
-            "cppStandard": "gnu++17",
+            "cStandard": "gnu11",
+            "cppStandard": "gnu++11",
             "intelliSenseMode": "macos-gcc-arm64"
         }
     ],
