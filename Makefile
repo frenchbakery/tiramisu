@@ -59,6 +59,14 @@ copy_files:
 shell:
 	ssh $(USER)@$(HOST)
 
+# invokes ssh-keygen
+keygen:
+	ssh-keygen
+	
+# invokes ssh copy ID for the remote host
+keycopy:
+	ssh-copy-id $(USER)@$(HOST)
+
 
 ## == shortcuts and convenience features
 

@@ -32,7 +32,7 @@ USER = access
 HOST = 10.42.0.149
 ```
 
-This is all the configuratino needed, however it is recommended to set up SSH key-based authentication to the Wombat, or else you will be typing your password **A LOT** while using the Makefile.
+This is all the configuratino needed, however it is recommended to set up SSH key-based authentication to the Wombat, or else you will be typing your password **A LOT** while using the Makefile. You can use the ```keygen``` and ```keycopy``` make targets to do that (described below).
 
 Now you can use any of the provided make targets to deploy, build and run your project:
 
@@ -44,6 +44,8 @@ make <target>
  - ```remote_build```: envokes the default make target on the target host to build the project from the (previously copied) source files.
  - ```remote_start```: runs the binary (```run/main```) on the target host (it has to be build beforehand)
  - ```shell```: opens an SSH session to the configured target host
+ - ```keygen```: invokes ssh-keygen to generate a SSH key pair (use this if you haven't already generated a pair)
+ - ```keycopy```: invokes ssh-copy-id to copy the default SSH key to the configured remote target. If no keys are found, use ```keygen``` to generate them.
  - ```start```: copies the files, builds the project and runs it on the target all in one command. This just invokes the first three make targets in a row.
  - ```build```: same as ```start``` but without running the binary
  - ```mount```: mounts the Wombat's file system in the "mount" folder in the project directory. This only works if sshfs is installed in the container (it isn't by default)
