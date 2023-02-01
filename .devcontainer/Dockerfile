@@ -12,7 +12,7 @@ RUN if [ "${REINSTALL_CMAKE_VERSION_FROM_SOURCE}" != "none" ]; then \
 
 # custom installing arm64 compiler for udisim server to run on RPi
     && sudo apt-get update \
-    && sudo apt-get -y install g++-aarch64-linux-gnu libasio-dev
+    && sudo apt-get -y install g++-aarch64-linux-gnu libasio-dev iputils-ping
 
 # [Optional] Uncomment this section to install additional vcpkg ports.
 # RUN su vscode -c "${VCPKG_ROOT}/vcpkg install <your-port-name-here>"
