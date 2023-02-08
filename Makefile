@@ -1,6 +1,12 @@
+# the default env configuration that is used when not
+# specified in env.mk
+CARG = 
+LARG = 
+USER = access
+HOST = 10.42.0.149
 
 # include environment configuration that includes deployment
-# host and user name
+# host and user name, compiler flags and other config
 include env.mk
 
 
@@ -14,8 +20,8 @@ WORKSPACE_NAME = $(shell basename ${PWD})
 
 # C++ configuration
 CC = g++
-CFLAGS = -g -I$(INCLUDE_DIR) -I$(SRC_DIR) -std=c++11
-LIBS = -lpthread -lwallaby
+CFLAGS = -g -I$(INCLUDE_DIR) -I$(SRC_DIR) $(CARG) -std=c++11 
+LIBS = -lpthread -lwallaby $(LARG)
 
 # files and compliation results
 SOURCES = $(shell find $(SRC_DIR) -name '*.cpp')

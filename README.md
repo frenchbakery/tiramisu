@@ -16,6 +16,8 @@ The dev template is the development environment we use to write programms for th
 
 To get started developing for the Wombat using this template, either create a fork or an independent copy of the repository and clone it to your machine. A fork offers the benefit of allowing updates with changes from the base repo, in case new features are added to the environment.
 
+### Container Development
+
 Before opening the folder, make sure you have the VSCode Dev Containers extension and docker installed according to the [installation manual](https://code.visualstudio.com/docs/devcontainers/containers). Then use the VSCode command 
 
 ```Dev Containers: Open Folder in Container ...```
@@ -24,15 +26,39 @@ and select the cloned repository folder. The first time this is done, it will do
 
 You can now start creating your code inside the src folder! Any header-only dependencies can be added to the include folder. These will be copied and included in the compilation (Note: the devinclude folder is not supposed to be modified, it is not included in the compilation).
 
+### Environment Configuration
+
 Before compiling and/or running the project, you will have to establish a network connection to the Wombat controller using either an ethernet cable or WiFi. (Note: The Wombat controller has to have a linux user that can be accessed using ssh. This user can be created using the default shell included in the KISS web interface. We have named our user "access") Then create a file called ```env.mk``` and add the username and IP address (or domain) that is used to log in to the Raspberry Pi:
 
-```Makefile
+```ini
 # deployment host config
 USER = access
 HOST = 10.42.0.149
 ```
 
+You can also add further configurations in this file such as additional compiler and linker arguments. This is useful for project specific defines:
+
+```ini
+# example for a compiler flag (more can be added)
+CARG = -DSOME_DEFINE
+# example for a linker argument (more can be added)
+LARG = -lmylibrary
+```
+
+For any value not specified int the ```env.mk``` file, one of the following defaults will be used:
+
+```ini
+CARG = 
+LARG = 
+USER = access
+HOST = 10.42.0.149
+```
+
+### Remote access
+
 This is all the configuratino needed, however it is recommended to set up SSH key-based authentication to the Wombat, or else you will be typing your password **A LOT** while using the Makefile. You can use the ```keygen``` and ```keycopy``` make targets to do that (described below).
+
+### Build, deploy, run!
 
 Now you can use any of the provided make targets to deploy, build and run your project:
 
