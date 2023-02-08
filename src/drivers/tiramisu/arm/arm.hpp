@@ -15,8 +15,6 @@
 #include <kipr/digital.hpp>
 #include <kipr/motors.hpp>
 #include <kipr/servo.hpp>
-#include <kipr/util.h>
-#include <iostream>
 #include <cmath>
 
 // using namespace kipr::digital;
@@ -29,6 +27,7 @@
 class Arm
 {
     public:
+        typedef double angle_t;
         typedef double shoulder_angle_t;  // value beween 0 and 90
         typedef double ellbow_angle_t;  // value between  0 and 135
         typedef float perc_value_t;  // value between 0 and 100
@@ -39,12 +38,24 @@ class Arm
         Digital &max_switch;
         Digital &min_switch;
 
-        // arm lengths in cm
-        const short int shoulder_length = 0;
-        const short int ellbow_length = 0;
+        // arm lengths in cm (metal parts spacing: 1.6mm, lego spacing: 0.8mm)
+        // shoulder
+        const double shoulder_length = 15 * 1.6;
+        const double shoulder_servo_length = 5.2;
+        const double shoulder_connector_length = 24 * .8;
+        const double shoulder_connector_height = 8 * 1.6;
+        const double servo_x_off = 1.6 * 7.3;
+        const double servo_y_off = .8 * 7.6;
+        // const double servo_off_len = sqrt(pow(servo_x_off, 2) + pow(servo_y_off, 2));
+        const double servo_off_len = 13;
+        const angle_t servo_off_angle = atan(servo_x_off / servo_y_off);
+
+        // ellbow
+        const double ellbow_length = 29 * .8;
 
         // shoulder servo max values
-        const int shoulder_high = 1710;
+        const int shoulder_high = 1900;
+        const int shoulder_90 = 1760;
         const int shoulder_low = 0;
 
         // calibration configuration
@@ -61,7 +72,7 @@ class Arm
          * @param servo_pos servo position to calculate from (0-2048)
          * @return double - the shoulder angle
          */
-        shoulder_angle_t servoToAngle(Servo::ticks_t servo_pos);
+        shoulder_angle_t servoAngleToShoulderAngle(Servo::ticks_t servo_pos);
 
         /**
          * @brief calculate the servo position given the desired angle
@@ -69,12 +80,12 @@ class Arm
          * @param angle the angle to calculate for (0-90)
          * @return double - the servo position to set
          */
-        Servo::ticks_t angleToServo(shoulder_angle_t angle);
 
         ellbow_angle_t motorPercToAngle(perc_value_t motor_perc);
         perc_value_t angleToMotorPerc(ellbow_angle_t angle);
 
     public:
+        Arm::angle_t shoulderAngleToServoAngle(shoulder_angle_t angle);
         Arm(Motor &ellbow, Servo &shoulder, Digital &end_switch, Digital &start_switch);
 
         /**
@@ -97,7 +108,9 @@ class Arm
          * @param position_perc value between 0 and 100
          * @param speed value between 0 and 100 
          */
-        void moveShoulderTo(perc_value_t position_perc, short speed);
+        void moveShoulderTo(perc_value_t position_perc, short speed = 80);
+
+        void moveShoulderToAngle(shoulder_angle_t angle, short speed = 80);
 
         // properties
         double getEllbowAngle();
