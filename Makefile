@@ -41,7 +41,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 
 # run main binary remote target
 remote_start: 
-	ssh $(USER)@$(HOST) "bash -c \"cd projects/$(WORKSPACE_NAME) && sudo $(RUN_DIR)/main\""
+	ssh -t $(USER)@$(HOST) "cd projects/$(WORKSPACE_NAME); sudo $(RUN_DIR)/main"
 
 # envoke build on remote target
 remote_build:
@@ -57,7 +57,7 @@ copy_files:
 
 # open shell on remote target
 shell:
-	ssh $(USER)@$(HOST)
+	ssh -t $(USER)@$(HOST) "cd projects/$(WORKSPACE_NAME); exec '$$SHELL'"
 
 # invokes ssh-keygen
 keygen:
