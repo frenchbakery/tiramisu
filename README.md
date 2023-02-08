@@ -45,12 +45,12 @@ make <target>
  - ```remote_start```: runs the binary (```run/main```) on the target host (it has to be build beforehand)
  - ```shell```: opens an SSH session to the configured target host
  - ```keygen```: invokes ssh-keygen to generate a SSH key pair (use this if you haven't already generated a pair)
- - ```keycopy```: invokes ssh-copy-id to copy the default SSH key to the configured remote target. If no keys are found, use ```keygen``` to generate them.
- - ```start```: copies the files, builds the project and runs it on the target all in one command. This just invokes the first three make targets in a row.
+ - ```keycopy```: invokes ssh-copy-id to copy the default SSH key to the configured remote target. If no keys are found, use ```keygen``` to generate them
+ - ```start```: copies the files, builds the project and runs it on the target all in one command. This just invokes the first three make targets in a row
  - ```build```: same as ```start``` but without running the binary
- - ```mount```: mounts the Wombat's file system in the "mount" folder in the project directory. This only works if sshfs is installed in the container (it isn't by default).
+ - ```mount```: mounts the Wombat's file system in the "mount" folder in the project directory. This only works if sshfs is installed in the container (it isn't by default)
  - ```unmount```: unmounts the Wombat's file system mounted using ```mount```
- - ```clean```: removes any object and binary files. This doesn't do anything in the container because these files are only created during compilation on the target.
+ - ```clean```: removes any object and binary files. This doesn't do anything in the container because these files are only created during compilation on the target
 
 The default make target would build the source files but this should never be invoked directly, as that will only work on the Wombat. It is invoked by the ```remote_build``` target on the Wombat via SSH.
 
