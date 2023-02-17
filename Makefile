@@ -57,7 +57,7 @@ remote_build:
 copy_files:
 	ssh $(USER)@$(HOST) "rm -rf projects/$(WORKSPACE_NAME)/* && mkdir -p projects/$(WORKSPACE_NAME)/$(SRC_DIR) && mkdir -p projects/$(WORKSPACE_NAME)/$(INCLUDE_DIR)"
 	scp -r ../$(WORKSPACE_NAME)/$(SRC_DIR) $(USER)@$(HOST):projects/$(WORKSPACE_NAME)/
-	scp -r ../$(WORKSPACE_NAME)/$(INCLUDE_DIR) $(USER)@$(HOST):projects/$(WORKSPACE_NAME)/$(INCLUDE_DIR)
+	scp -r ../$(WORKSPACE_NAME)/$(INCLUDE_DIR) $(USER)@$(HOST):projects/$(WORKSPACE_NAME)/
 	scp -r ../$(WORKSPACE_NAME)/Makefile $(USER)@$(HOST):projects/$(WORKSPACE_NAME)/Makefile
 	scp -r ../$(WORKSPACE_NAME)/env.mk $(USER)@$(HOST):projects/$(WORKSPACE_NAME)/env.mk
 
