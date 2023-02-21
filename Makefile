@@ -47,11 +47,11 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 
 # run main binary remote target
 remote_start: 
-	ssh -t $(USER)@$(HOST) "cd projects/$(WORKSPACE_NAME); sudo $(RUN_DIR)/main"
+	ssh -t $(USER)@$(HOST) "cd projects/$(WORKSPACE_NAME); $(RUN_DIR)/main"
 
 # envoke build on remote target
 remote_build:
-	ssh $(USER)@$(HOST) "bash -c \"cd projects/$(WORKSPACE_NAME) && make\""
+	ssh $(USER)@$(HOST) "bash -c \"cd projects/$(WORKSPACE_NAME) && make -j2\""
 
 # copy sources and Makefile to remote target
 copy_files:
