@@ -12,14 +12,15 @@
 // #include <kipr/motor/motor.hpp>
 // #include <kipr/servo/servo.hpp>
 // #include <kipr/time/time.h>
-#include <kipr/digital.hpp>
-#include <kipr/motors.hpp>
-#include <kipr/servo.hpp>
+#include <kipr/digital/digital.hpp>
+#include <kipr/motor/motor.hpp>
+#include <kipr/servo/servo.hpp>
 #include <cmath>
 
-// using namespace kipr::digital;
-// using namespace kipr::motor;
-// using namespace kipr::servo;
+
+using namespace kipr::digital;
+using namespace kipr::motor;
+using namespace kipr::servo;
 /**
  * @brief driver implementing the whole tiramisu arm
  * 
@@ -35,6 +36,7 @@ class Arm
     private:
         Servo &shoulder_servo;
         Motor &ellbow_motor;
+        BackEMF &ellbow_emf;
         Digital &max_switch;
         Digital &min_switch;
 
@@ -42,8 +44,8 @@ class Arm
         // shoulder
         const double shoulder_length = 15 * 1.6;
         const double shoulder_servo_length = 5.2;
-        const double shoulder_connector_length = 24 * .8;
-        const double shoulder_connector_height = 8 * 1.6;
+        const double shoulder_connector_length = 23 * .8;
+        const double shoulder_connector_height = 6 * 1.6;
         const double servo_x_off = 1.6 * 7.3;
         const double servo_y_off = .8 * 7.6;
         // const double servo_off_len = sqrt(pow(servo_x_off, 2) + pow(servo_y_off, 2));
@@ -80,13 +82,13 @@ class Arm
          * @param angle the angle to calculate for (0-90)
          * @return double - the servo position to set
          */
+        Arm::angle_t shoulderAngleToServoAngle(shoulder_angle_t angle);
 
         ellbow_angle_t motorPercToAngle(perc_value_t motor_perc);
         perc_value_t angleToMotorPerc(ellbow_angle_t angle);
 
     public:
-        Arm::angle_t shoulderAngleToServoAngle(shoulder_angle_t angle);
-        Arm(Motor &ellbow, Servo &shoulder, Digital &end_switch, Digital &start_switch);
+        Arm(BackEMF &ellbow_emf, Motor &ellbow, Servo &shoulder, Digital &end_switch, Digital &start_switch);
 
         /**
          * @brief calibrate the arms position
@@ -111,6 +113,8 @@ class Arm
         void moveShoulderTo(perc_value_t position_perc, short speed = 80);
 
         void moveShoulderToAngle(shoulder_angle_t angle, short speed = 80);
+
+        void grabCube();
 
         // properties
         double getEllbowAngle();

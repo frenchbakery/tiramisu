@@ -1,4 +1,4 @@
-#include <kipr/util.h>
+#include <kipr/time/time.h>
 #include "utils.hpp"
 #include <iostream>
 #include "arm.hpp"
@@ -54,8 +54,8 @@ Arm::perc_value_t angleToMotorPerc(Arm::ellbow_angle_t angle)
 }
 
 
-Arm::Arm(Motor &ellbow, Servo &shoulder, Digital &end_switch, Digital &start_switch)
- : ellbow_motor(ellbow), shoulder_servo(shoulder), max_switch(end_switch), min_switch(start_switch)
+Arm::Arm(BackEMF &emf, Motor &ellbow, Servo &shoulder, Digital &end_switch, Digital &start_switch)
+ : ellbow_emf(emf), ellbow_motor(ellbow), shoulder_servo(shoulder), max_switch(end_switch), min_switch(start_switch)
 {
     // -1 means not calibrated
     current_position = -1;
@@ -90,21 +90,26 @@ void Arm::calibrate()
     ellbow_motor.off();
 
     int times_moved = 0;
-    // wait for motor to finish
-    while (!min_switch.value())
-    {
-        ellbow_motor.clearPositionCounter();
-        ellbow_motor.moveToPosition(-100, -calibrate_accuracy);
 
-        times_moved++;        
-        while (!ellbow_motor.isMotorDone()) {};
-    };
+    // wait for motor to finish
+    ellbow_motor.clearPositionCounter();
+    ellbow_motor.moveAtVelocity(-calibrate_speed);
+    while (!min_switch.value()) {msleep(10);};
+    // {
+        // ellbow_motor.clearPositionCounter();
+        // ellbow_motor.moveToPosition(-100, -calibrate_accuracy);
+
+        // times_moved++;        
+        // while (!ellbow_motor.isMotorDone()) {};
+    // };
     ellbow_motor.off();
 
-    pos_delta = times_moved * calibrate_accuracy;
+    // pos_delta = times_moved * calibrate_accuracy;
+    pos_delta = -ellbow_emf.value();
     ellbow_motor.clearPositionCounter();
 
-    std::cout << "moved " << times_moved << " times\n";
+    ellbow_motor.moveToPosition(100, 50);
+    msleep(300);
 
     current_position = 0;
 }
@@ -133,7 +138,9 @@ void Arm::moveEllbowTo(Arm::perc_value_t position_perc, float speed)
         // end position switches are triggered
         if (max_switch.value() || min_switch.value())
         {
-            return calibrate();
+            std::cout << "end\n";
+            ellbow_motor.off();
+            for (;;) {msleep(10);};
         }
     }
 
@@ -209,5 +216,10 @@ void Arm::moveShoulderToAngle(Arm::shoulder_angle_t angle, short speed)
 
     // last step
     shoulder_servo.setPosition(servo_pos);
+}
 
+
+void Arm::grabCube()
+{
+    return;
 }
