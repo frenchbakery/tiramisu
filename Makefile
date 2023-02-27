@@ -20,8 +20,8 @@ WORKSPACE_NAME = $(shell basename ${PWD})
 
 # C++ configuration
 CC = g++
-CFLAGS = -g -I$(INCLUDE_DIR) -I$(SRC_DIR) $(CARG) -std=c++11 
-LIBS = -lpthread -lwallaby $(LARG)
+CFLAGS = -g -I$(INCLUDE_DIR) -I$(SRC_DIR) $(CARG) -std=c++17
+LIBS = -lpthread -lkipr $(LARG)
 
 # files and compliation results
 SRC_SOURCES = $(shell find $(SRC_DIR) -name '*.cpp')
