@@ -1,8 +1,11 @@
+#include "drivers/tiramisu/cam_funcs/cam_funcs.hpp"
 #include "drivers/tiramisu/grepper/grepper.hpp"
 #include "drivers/tiramisu/arm/arm.hpp"
 #include <kipr/botball/botball.h>
 #include <kipr/analog/analog.hpp>
 #include <kipr/create/create.h>
+#include <kipr/create/create.hpp>
+#include <kipr/camera/camera.h>
 #include <kipr/time/time.h>
 #include <iostream>
 
@@ -10,6 +13,36 @@ using namespace kipr::motor;
 using namespace kipr::servo;
 using namespace kipr::digital;
 using namespace kipr::analog;
+
+#define ANGLE_MUlT 1 / 1.3
+
+
+void grab_cube(Analog &dist_sens, Servo &grab_serv, Arm &my_arm)
+{
+    grab_serv.setPosition(1630);
+
+    my_arm.moveEllbowTo(48);
+    my_arm.moveShoulderToAngle(115);
+
+    std::cout << "set stuff\n";
+
+    Cam::look_at(YELLOW_CHANNEL);
+
+    std::cout << "centered\n";
+
+    // program
+    // get closer
+    create_drive_straight(20);
+    while (dist_sens.value() < 2500) { msleep(10); create_drive_straight(40); };
+    create_stop();
+
+    grab_serv.setPosition(1000);
+    msleep(500);
+    my_arm.moveEllbowTo(80);
+    create_drive_straight(-100);
+    msleep(1500);
+    create_stop();
+}
 
 
 int main()
@@ -32,6 +65,9 @@ int main()
 
     // Gripper gripper(grab_servo, l_motor, r_motor, end_sensor);
 
+    int c_open = camera_open_device_model_at_res(0, BLACK_2017, Resolution::LOW_RES);
+    camera_load_config("cubes.conf");
+
     Analog dist_sens(0);
     Servo grab_serv(2);
     Servo turn_serv(3);
@@ -42,36 +78,76 @@ int main()
     turn_serv.setPosition(1024);
     grab_serv.setPosition(1630);
 
-    if (!create_connect())
+    get_create_total_angle();
+
+    if (!create_connect() && c_open)
     {
+        // ss.setPosition(1900);
+        // return 0;
+
         my_arm.calibrate();
         std::cout << "done calibrating\n";
 
-        my_arm.moveEllbowTo(45);
+        // center on cube
+        grab_cube(dist_sens, grab_serv, my_arm);
 
-        // create_start();
+        create_spin_block(100, -180 * ANGLE_MUlT);
+        create_stop();
 
-        // program
-        // get closer
-        create_drive_straight(40);
-        while (dist_sens.value() < 2500) { msleep(10); };
-        std::cout << "lower";
-        create_drive_straight(0);
- 
+        // drop first cube
+        my_arm.moveEllbowTo(10);
+        my_arm.moveShoulderToAngle(30);
+        msleep(1000);
+
+        grab_serv.setPosition(1630);
+        msleep(1000);
+
+        my_arm.moveShoulderToAngle(110);
         grab_serv.setPosition(1100);
-        msleep(500);
-        my_arm.moveEllbowTo(80);
+        create_spin_block(100, 80 * ANGLE_MUlT);
+
+        // drive to second cube
+        set_create_distance(0);
+        create_drive_straight(100);
+        while (get_create_distance() < 900) { msleep(10); };
+        create_stop();
+        std::cout << "drove 900: " << get_create_distance() << "\n";
+
+        create_spin_block(100, 90 * ANGLE_MUlT);
+        create_stop();
+
+        // grab second cube
+        grab_cube(dist_sens, grab_serv, my_arm);
+
+        create_spin_block(100, -90 * ANGLE_MUlT);
+        set_create_distance(0);
         create_drive_straight(-100);
-        msleep(2000);
-        create_drive_straight(0);
+        while (get_create_distance() > -900) { msleep(10); };
+        create_stop();
 
-        create_spin_block(100, 180);
+        create_spin_block(100, -90 * ANGLE_MUlT);
+        create_stop();
 
+        // drop second cube
+        my_arm.moveEllbowTo(10);
+        my_arm.moveShoulderToAngle(40);
+        msleep(1000);
+
+        grab_serv.setPosition(1630);
+        msleep(1000);
+
+        my_arm.moveShoulderToAngle(110);
+        grab_serv.setPosition(1100);
+
+        msleep(1000);
         // turn around and 
    }
     
 
     std::cout << "done\n";
+    create_disconnect();
+    camera_close();
+    create_stop();
 
     return 0;
 }

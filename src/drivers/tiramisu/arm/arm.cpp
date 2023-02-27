@@ -127,7 +127,7 @@ void Arm::moveEllbowTo(Arm::perc_value_t position_perc, float speed)
     ellbow_motor.clearPositionCounter();
     ellbow_motor.moveToPosition(speed, delta);
 
-    std::cout << "range: " << pos_delta << ", moving to: " << delta << "\n";
+    std::cout << "range: " << pos_delta << ", moving to: " << wanted_position << " arg: " << position_perc << "\n";
 
     // wait for leaving end switches
     while (max_switch.value() || min_switch.value()) {msleep(10);};

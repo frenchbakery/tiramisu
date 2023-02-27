@@ -43,8 +43,8 @@ class Arm
         // arm lengths in cm (metal parts spacing: 1.6mm, lego spacing: 0.8mm)
         // shoulder
         const double shoulder_length = 15 * 1.6;
-        const double shoulder_servo_length = 5.2;
-        const double shoulder_connector_length = 23 * .8;
+        const double shoulder_servo_length = 4 * 1.6;
+        const double shoulder_connector_length = 21 * .8;
         const double shoulder_connector_height = 6 * 1.6;
         const double servo_x_off = 1.6 * 7.3;
         const double servo_y_off = .8 * 7.6;
@@ -102,7 +102,7 @@ class Arm
          * @param position_perc value beween 0 and 100
          * @param speed value between 0 and 1024
          */
-        void moveEllbowTo(perc_value_t position_perc, float speed = 200);
+        void moveEllbowTo(perc_value_t position_perc, float speed = 512);
 
         /**
          * @brief move the shoulder joint
