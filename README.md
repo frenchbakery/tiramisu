@@ -1,111 +1,22 @@
-# FrenchBakery Dev-Template
+# Tiramisu Robot Software
 
-The dev template is the development environment we use to write programs for the KIPR Wombat controller. It contains a simple build system and dev container configuration allowing you to develop C and C++ programs for the Wombat controller with the comfort of all of VSCode and full C++ IntelliSense.
+The tiramisu robot software contains all the code running on the Wombat controller of FrenchBakery's Tiramisu (Create-based) robot.
 
 ## Features
 
- - Dev Container to provide the preconfigured linux development experience (git, ssh, scp, ...) on any host OS and platform
- - C++ IntelliSense for the aarch64 platform including all standard linux headers and the KIPR standard library headers
- - Simple All-In-One Build system based on Makefile
-   - Automatic deployment to the Raspberry Pi (copy files)
-   - Automatic remote compilation on the Pi
-   - Automatic remote start with local console I/O for debugging and interacting with any programs
+ - Arm inverse kinematics
+ - Gripper inverse kinematics
+ - Basic driving functionality
 
 
 ## Getting started
 
-To get started developing for the Wombat using this template, either create a fork or an independent copy of the repository and clone it to your machine. A fork offers the benefit of allowing updates with changes from the base repo, in case new features are added to the environment.
+This repo uses the frenchbakery/dev_template build system. To get started running this project, clone the repo and setup your workspace according to the guide in the [dev_template's readme](https://github.com/frenchbakery/dev_template/blob/main/README.md).
 
-### Container Development
+## Clarification of code structure
 
-Before opening the folder, make sure you have the VSCode Dev Containers extension and docker installed according to the [installation manual](https://code.visualstudio.com/docs/devcontainers/containers). Then use the VSCode command 
+Not all code in this repository was written by FrenchBakery for the Botball turnament. This is to clarify what is and is not part of the Botball code.
 
-```Dev Containers: Open Folder in Container ...```
-
-and select the cloned repository folder. The first time this is done, it will download the container base image and install the development environment and compiler. Then it will open the folder inside the container, like connecting to any remote VSCode server. Every time opening the folder after that, the container is already installed and you will immediately be connected to it.
-
-You can now start creating your code inside the src folder! Any header-only dependencies can be added to the include folder. These will be copied and included in the compilation (Note: the devinclude folder is not supposed to be modified, it is not included in the compilation).
-
-### Environment Configuration
-
-Before compiling and/or running the project, you will have to establish a network connection to the Wombat controller using either an ethernet cable or WiFi. (Note: The Wombat controller has to have a linux user that can be accessed using ssh. This user can be created using the default shell included in the KISS web interface. We have named our user "access") Then create a file called ```env.mk``` and add the username and IP address (or domain) that is used to log in to the Raspberry Pi:
-
-```ini
-# deployment host config
-USER = access
-HOST = 10.42.0.149
-```
-
-You can also add further configurations in this file such as additional compiler and linker arguments. This is useful for project specific defines:
-
-```ini
-# example for a compiler flag (more can be added)
-CARG = -DSOME_DEFINE
-# example for a linker argument (more can be added)
-LARG = -lmylibrary
-```
-
-For any value not specified int the ```env.mk``` file, one of the following defaults will be used:
-
-```ini
-CARG = 
-LARG = 
-USER = access
-HOST = 10.42.0.149
-```
-
-### Remote access
-
-This is all the configuration needed, however it is recommended to set up SSH key-based authentication to the Wombat, or else you will be typing your password **A LOT** while using the Makefile. You can use the ```keygen``` and ```keycopy``` make targets to do that (described below).
-
-### Build, deploy, run!
-
-Now you can use any of the provided make targets to deploy, build and run your project:
-
-```bash
-make <target>
-```
-
- - ```copy_files```: copies all files required to build the project to a Project folder of the same name as locally (src/, include/, Makefile, env.mk)
- - ```remote_build```: envokes the default make target on the target host to build the project from the (previously copied) source files
- - ```remote_start```: runs the binary (```run/main```) on the target host (it has to be build beforehand)
- - ```shell```: opens an SSH session to the configured target host
- - ```keygen```: invokes ssh-keygen to generate a SSH key pair (use this if you haven't already generated a pair)
- - ```keycopy```: invokes ssh-copy-id to copy the default SSH key to the configured remote target. If no keys are found, use ```keygen``` to generate them
- - ```start```: copies the files, builds the project and runs it on the target all in one command. This just invokes the first three make targets in a row
- - ```build```: same as ```start``` but without running the binary
- - ```mount```: mounts the Wombat's file system in the "mount" folder in the project directory. This only works if sshfs is installed in the container (it isn't by default)
- - ```unmount```: unmounts the Wombat's file system mounted using ```mount```
- - ```clean```: removes any object and binary files. This doesn't do anything in the container because these files are only created during compilation on the target
-
-The default make target would build the source files but this should never be invoked directly, as that will only work on the Wombat. It is invoked by the ```remote_build``` target on the Wombat via SSH.
-
-
-## Extension recommendations
-
-It is recommended to install the following VSCode extensions because they are useful while coding:
-
- - Git Graph
- - Doxygen Documentation Generator
-
-It is advised not to install the Microsoft Makefile tools, because they may mess with the IntelliSense configuration if not operated carefully.
-
-All of these recommendations are also listed in the ```.vscode/extensions.json``` file.
-
-
-## Updating
-
-When changes are made to the container configuration, after updating your fork with the latest changes, it is required to rebuild the docker container to accomodate these changes.
-
-Warning: Any software that has been installed in the container or any configurations that are not stored as files in the project folder will be lost after this operation. To prevent this from becomming an issue, we recommend adding these config and install commands to the ```.devcontainer/Dockerfile``` like can be seen with the existing installations. This way, everything will be reinstalled and configured automatically afer rebuilding the container.
-
-To rebuild the container use the following VSCode command:
-
-```Dev Containers: Rebuild Container```
-
-
-## Improvements and contributions
-
-If you have features you feel should be added to the default installation because you use them all the time, don't just add them to your project but instead to the base template so they can be reused for other projects. 
-
-Feel free to open a Pull Request for any additional features, we will be happy to add new useful features to the template.
+ - ```src/```: This is the main project folder and contains all the source files and headers specifically for controlling the Tiramisu (and possibly some code shared with the Croissant robot)
+ - ```devinclude/```: ANy headers in this folder are NOT part of the project. This folder includes libkipr headers that are not included in compilation. They are purely required for VSCode intellisense support.
+ - ```include/
