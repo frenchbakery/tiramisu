@@ -1,0 +1,3 @@
+[submodule "src/drivers/navigation"]
+	path = src/drivers/navigation
+	url = https://github.com/frenchbakery/navigation

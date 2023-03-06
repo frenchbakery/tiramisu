@@ -8,6 +8,7 @@
 #include <kipr/camera/camera.h>
 #include <kipr/time/time.h>
 #include <iostream>
+#include <iomanip>
 
 using namespace kipr::motor;
 using namespace kipr::servo;
@@ -47,6 +48,21 @@ void grab_cube(Analog &dist_sens, Servo &grab_serv, Arm &my_arm)
 
 int main()
 {
+    if (!create_connect())
+    {
+        set_create_distance(0);
+        create_drive(200, 500);
+        for (;;)
+        {
+            short l, r;
+            _create_get_raw_encoders(&l, &r);
+            std::cout << "l=" << std::setw(4) << l << " r=" << std::setw(4) << r << std::endl;
+            msleep(50);
+        }
+    }
+
+
+    return 0;
     // shut_down_in(115);
 
     // initialize arm
