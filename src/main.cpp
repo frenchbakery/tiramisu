@@ -51,14 +51,18 @@ int main()
     if (!create_connect())
     {
         set_create_distance(0);
-        create_drive(200, 500);
-        for (;;)
+        create_drive_direct(-200, -200);
+        int ms = 0;
+        while ( ms < 2000)
         {
             short l, r;
             _create_get_raw_encoders(&l, &r);
             std::cout << "l=" << std::setw(4) << l << " r=" << std::setw(4) << r << std::endl;
+            ms += 50;
             msleep(50);
         }
+        create_stop();
+        create_disconnect();
     }
 
 
