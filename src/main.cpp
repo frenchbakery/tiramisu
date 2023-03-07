@@ -9,6 +9,7 @@
 #include <kipr/time/time.h>
 #include <iostream>
 #include <iomanip>
+#include <thread>
 #include "pitches.h"
 
 using namespace kipr::motor;
@@ -18,7 +19,7 @@ using namespace kipr::analog;
 
 #define ANGLE_MUlT 1 / 1.3
 
-uint16_t treble_melody[64] = {
+const std::vector<uint8_t> treble_melody{
     NR_NOTE_E5,
     NR_NOTE_E3,
     NR_NOTE_B4,
@@ -85,7 +86,7 @@ uint16_t treble_melody[64] = {
     0,
 };
 
-uint16_t bass_melody[64] = {
+const std::vector<uint8_t> bass_melody{
     NR_NOTE_E4,
     NR_NOTE_E3,
     NR_NOTE_A2,
@@ -153,7 +154,7 @@ uint16_t bass_melody[64] = {
 };
 
 // note durations: 4 = quarter note, 8 = eighth note, etc
-uint8_t treble_durations[64] = {
+const std::vector<uint8_t> treble_durations{
     8,
     8,
     8,
@@ -220,7 +221,7 @@ uint8_t treble_durations[64] = {
     4,
 };
 
-uint8_t bass_durations[64] = {
+const std::vector<uint8_t> bass_durations{
     8,
     8,
     8,
@@ -303,7 +304,11 @@ void grab_cube(Analog &dist_sens, Servo &grab_serv, Arm &my_arm)
     // program
     // get closer
     create_drive_straight(20);
-    while (dist_sens.value() < 2500) { msleep(10); create_drive_straight(40); };
+    while (dist_sens.value() < 2500)
+    {
+        msleep(10);
+        create_drive_straight(40);
+    };
     create_stop();
 
     grab_serv.setPosition(1000);
@@ -314,74 +319,77 @@ void grab_cube(Analog &dist_sens, Servo &grab_serv, Arm &my_arm)
     create_stop();
 }
 
+void playLongSong(const std::vector<uint8_t> &notes, const std::vector<uint8_t> &durations)
+{
+    float speed = 1.5;
+
+    if (notes.size() != durations.size()) return;
+    if (notes.size() == 0) return;
+    int sections = std::ceil((float)(notes.size()) / 16.0f);
+
+    while (get_create_song_playing())
+                msleep(1);
+
+    uint8_t scsong[32];
+    int scnotes;
+    int scnumber;
+
+    for (int section = 0; section < sections; section++)
+    {
+        scnotes = std::min(notes.size() - 16 * section, 16ul);
+        scnumber = section % 4;
+
+        for (int i = 0; i < 16; i++)
+        {
+            scsong[i * 2] = notes[i + section * 16];
+            int t = (64 * speed) / durations[i + section * 16];
+            scsong[(i * 2) + 1] = t;
+        }
+        create_load_song(scsong, scnotes, scnumber);
+        while (get_create_song_playing())
+            msleep(1);
+        create_play_song(scnumber);
+        msleep(500);
+    }
+}
+
+std::thread player;
+bool player_exit;
+void startPlayer()
+{
+    player_exit = false;
+    player = std::thread([](){
+        for (;;)
+        {
+            playLongSong(treble_melody, treble_durations);
+            if (player_exit) break;
+            playLongSong(bass_melody, bass_durations);
+            if (player_exit) break;
+        }
+    });
+}
+void stopPlayer()
+{
+    player_exit = true;
+    while (!player.joinable()) msleep(10);
+    player.join();
+}
+
 
 int main()
 {
 
     if (!create_connect())
     {
-        float speed = 1.5;
-        uint8_t tr1[32]; float t1 = 0;
-        for (int i = 0; i < 16; i++)
-        {
-            tr1[i * 2] = treble_melody[i];
-            int t = (64 * speed) / treble_durations[i];
-            tr1[(i * 2) + 1] = t;
-            t1 += (float)t / 64;
-        }
-        uint8_t tr2[32]; float t2 = 0;
-        for (int i = 0; i < 16; i++)
-        {
-            tr2[i * 2] = treble_melody[i+16];
-            int t = (64 * speed) / treble_durations[i+16];
-            tr2[(i * 2) + 1] = t;
-            t2 += (float)t / 64;
-        }
-        uint8_t tr3[32]; float t3 = 0;
-        for (int i = 0; i < 16; i++)
-        {
-            tr3[i * 2] = treble_melody[i+32];
-            int t = (64 * speed) / treble_durations[i+32];
-            tr3[(i * 2) + 1] = t;
-            t3 += (float)t / 64;
-        }
-        uint8_t tr4[32]; float t4 = 0;
-        for (int i = 0; i < 16; i++)
-        {
-            tr4[i * 2] = treble_melody[i+48];
-            int t = (64 * speed) / treble_durations[i+48];
-            tr4[(i * 2) + 1] = t;
-            t4 += (float)t / 64;
-        }
-        uint8_t bass_assembled[128];
-        for (int i = 0; i < 16; i++)
-        {
-            bass_assembled[i * 2] = bass_melody[i];
-            bass_assembled[(i * 2) + 1] = (64 * speed) / bass_durations[i];
-        }
-        create_spin_CW(100);
-        create_load_song(tr1, 16, 0);
-        create_load_song(tr2, 16, 1);
-        create_load_song(tr3, 16, 2);
-        create_load_song(tr4, 16, 3);
-        create_play_song(0);
-        msleep(1000);
-        while (get_create_song_playing()) msleep(1);
-        create_play_song(1);
-        msleep(1000);
-        while (get_create_song_playing()) msleep(1);
-        create_play_song(2);
-        msleep(1000);
-        while (get_create_song_playing()) msleep(1);
-        create_play_song(3);
-        msleep(1000);
-        while (get_create_song_playing()) msleep(1);
+        startPlayer();
+        msleep(30000);
+        stopPlayer();
         create_disconnect();
         return 0;
         set_create_distance(0);
         create_drive_direct(200, 200);
         int ms = 0;
-        while ( ms < 2000)
+        while (ms < 2000)
         {
             short l, r;
             _create_get_raw_encoders(&l, &r);
@@ -392,7 +400,6 @@ int main()
         create_stop();
         create_disconnect();
     }
-
 
     return 0;
     // shut_down_in(115);
@@ -457,7 +464,10 @@ int main()
         // drive to second cube
         set_create_distance(0);
         create_drive_straight(100);
-        while (get_create_distance() < 900) { msleep(10); };
+        while (get_create_distance() < 900)
+        {
+            msleep(10);
+        };
         create_stop();
         std::cout << "drove 900: " << get_create_distance() << "\n";
 
@@ -470,7 +480,10 @@ int main()
         create_spin_block(100, -90 * ANGLE_MUlT);
         set_create_distance(0);
         create_drive_straight(-100);
-        while (get_create_distance() > -900) { msleep(10); };
+        while (get_create_distance() > -900)
+        {
+            msleep(10);
+        };
         create_stop();
 
         create_spin_block(100, -90 * ANGLE_MUlT);
@@ -488,9 +501,8 @@ int main()
         grab_serv.setPosition(1100);
 
         msleep(1000);
-        // turn around and 
-   }
-    
+        // turn around and
+    }
 
     std::cout << "done\n";
     create_disconnect();
