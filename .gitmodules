@@ -1,0 +1,6 @@
+[submodule "include/el-std"]
+	path = include/el-std
+	url = https://github.com/melektron/el-std.git
+[submodule "include/kiprplus"]
+	path = include/kiprplus
+	url = https://github.com/frenchbakery/kiprplus
