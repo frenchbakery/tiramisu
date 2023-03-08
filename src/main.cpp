@@ -386,10 +386,10 @@ int main()
 
     std::shared_ptr<kp::CreateMotor> motorl = std::make_shared<kp::CreateMotor>(0);
     std::shared_ptr<kp::CreateMotor> motorr = std::make_shared<kp::CreateMotor>(1);
-    kp::AggregationEngine engine({
+    /*kp::AggregationEngine engine({
         motorl, motorr
     });
-    engine.setMovementModifiers({1, 1});
+    engine.setMovementModifiers({1, 1});*/
 
     motorl->clearPositionCounter();
     motorr->clearPositionCounter();
@@ -402,16 +402,22 @@ int main()
 
 
 
-    msleep(5000);
+    msleep(3000);
+    motorl->setAbsoluteTarget(1000);
+    motorr->setAbsoluteTarget(1000);
+    msleep(3000);
+    motorl->setAbsoluteTarget(0);
+    motorr->setAbsoluteTarget(0);
+    msleep(3000);
 
-    engine.moveRelativePosition(1000, 200);
+    /*engine.moveRelativePosition(1000, 200);
     engine.awaitSequenceComplete(); msleep(5000);
     engine.moveRelativePosition(-1000, 200);
     engine.awaitSequenceComplete(); msleep(5000);
     engine.moveRelativePosition(1000, 200);
     engine.awaitSequenceComplete(); msleep(5000);
     engine.moveRelativePosition(-1000, 200);
-    engine.awaitSequenceComplete(); msleep(5000);
+    engine.awaitSequenceComplete(); msleep(5000);*/
 
     motorl->disablePositionControl();
     motorr->disablePositionControl();
