@@ -13,6 +13,7 @@
 #include <kiprplus/pid_motor.hpp>
 
 
+
 class BallSorter
 {
     public:
@@ -28,11 +29,11 @@ class BallSorter
         const int calibrate_speed = 200;
 
         // positions
-        const int initial_servo_pos = 0;
-        const int servo_up = 0;
+        const int initial_servo_pos = 2074;
+        const int servo_up = 500;
 
-        const int motor_down = 0;
-        const int motor_drop = 0;
+        const int motor_down = 760;
+        const int motor_drop = 660;
 
     public:
         BallSorter(int motor_pin, int servo_pin, int switch_pin);
@@ -76,6 +77,9 @@ class BallSorter
          * @param speed servo ticks per second
          */
         void setServoSpeed(int speed);
+
+        void waitForMotor();
+        void waitForServo();
 
         // void setMotorSpeed(int speed);  // not implemented by melektron yet
 };
