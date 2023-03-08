@@ -7,6 +7,8 @@
 #include <kipr/create/create.hpp>
 #include <kipr/camera/camera.h>
 #include <kipr/time/time.h>
+#include <kiprplus/create_motor.hpp>
+#include <kiprplus/aggregation_engine.hpp>
 #include <iostream>
 #include <iomanip>
 #include <thread>
@@ -19,7 +21,8 @@ using namespace kipr::analog;
 
 #define ANGLE_MUlT 1 / 1.3
 
-const std::vector<uint8_t> treble_melody{
+const std::vector<uint8_t> treble_melody
+{
     NR_NOTE_E5,
     NR_NOTE_E3,
     NR_NOTE_B4,
@@ -379,27 +382,41 @@ void stopPlayer()
 int main()
 {
 
-    if (!create_connect())
-    {
-        startPlayer();
-        msleep(30000);
-        stopPlayer();
-        create_disconnect();
-        return 0;
-        set_create_distance(0);
-        create_drive_direct(200, 200);
-        int ms = 0;
-        while (ms < 2000)
-        {
-            short l, r;
-            _create_get_raw_encoders(&l, &r);
-            std::cout << "l=" << std::setw(4) << l << " r=" << std::setw(4) << r << std::endl;
-            ms += 50;
-            msleep(50);
-        }
-        create_stop();
-        create_disconnect();
-    }
+    kp::CreateMotor::globalCreateConnect();
+
+    std::shared_ptr<kp::CreateMotor> motorl = std::make_shared<kp::CreateMotor>(0);
+    std::shared_ptr<kp::CreateMotor> motorr = std::make_shared<kp::CreateMotor>(1);
+    kp::AggregationEngine engine({
+        motorl, motorr
+    });
+    engine.setMovementModifiers({1, 1});
+
+    motorl->clearPositionCounter();
+    motorr->clearPositionCounter();
+
+    motorl->setAbsoluteTarget(0);
+    motorr->setAbsoluteTarget(0);
+
+    motorl->enablePositionControl();
+    motorr->enablePositionControl();
+
+
+
+    msleep(5000);
+
+    engine.moveRelativePosition(1000, 200);
+    engine.awaitSequenceComplete(); msleep(5000);
+    engine.moveRelativePosition(-1000, 200);
+    engine.awaitSequenceComplete(); msleep(5000);
+    engine.moveRelativePosition(1000, 200);
+    engine.awaitSequenceComplete(); msleep(5000);
+    engine.moveRelativePosition(-1000, 200);
+    engine.awaitSequenceComplete(); msleep(5000);
+
+    motorl->disablePositionControl();
+    motorr->disablePositionControl();
+
+    kp::CreateMotor::globalCreateDisconnect();
 
     return 0;
     // shut_down_in(115);
