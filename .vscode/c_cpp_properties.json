@@ -12,7 +12,10 @@
             "compilerPath": "/usr/bin/aarch64-linux-gnu-g++",
             "cStandard": "gnu17",
             "cppStandard": "gnu++17",
-            "intelliSenseMode": "macos-gcc-arm64"
+            "intelliSenseMode": "macos-gcc-arm64",
+            "compilerArgs": [
+                "-D__TIRAMISU"
+            ]
         }
     ],
     "version": 4

@@ -1,6 +1,14 @@
-#include "drivers/tiramisu/cam_funcs/cam_funcs.hpp"
-#include "drivers/tiramisu/grepper/grepper.hpp"
-#include "drivers/tiramisu/arm/arm.hpp"
+/**
+ * @file main.cpp
+ * @author Nilusink
+ * @brief contains tiramisu entry point
+ * @version 0.1
+ * @date 2023-03-10
+ * 
+ * @copyright Copyright FrenchBakery(c) 2023
+ * 
+ */
+
 #include <kipr/botball/botball.h>
 #include <kipr/analog/analog.hpp>
 #include <kipr/create/create.h>
@@ -13,6 +21,10 @@
 #include <iomanip>
 #include <thread>
 #include "pitches.h"
+#include "drivers/navigation/tiramisu/tinav.hpp"
+#include "drivers/tiramisu/cam_funcs/cam_funcs.hpp"
+#include "drivers/tiramisu/grepper/grepper.hpp"
+#include "drivers/tiramisu/arm/arm.hpp"
 
 using namespace kipr::motor;
 using namespace kipr::servo;
@@ -20,6 +32,14 @@ using namespace kipr::digital;
 using namespace kipr::analog;
 
 #define ANGLE_MUlT 1 / 1.3
+
+
+namespace go
+{
+    Navigation *nav = nullptr;
+};
+
+
 
 void grab_cube(Analog &dist_sens, Servo &grab_serv, Arm &my_arm)
 {
@@ -52,67 +72,44 @@ void grab_cube(Analog &dist_sens, Servo &grab_serv, Arm &my_arm)
     create_stop();
 }
 
+
+
+
 int main()
 {
-
     kp::CreateMotor::globalCreateConnect();
+    go::nav = new TINav;
+    go::nav->initialize();
+    msleep(1000);
 
-    std::shared_ptr<kp::CreateMotor> motorl = std::make_shared<kp::CreateMotor>(0);
-    std::shared_ptr<kp::CreateMotor> motorr = std::make_shared<kp::CreateMotor>(1);
-    kp::AggregationEngine engine({
-        motorl, motorr
-    });
-    engine.setMovementModifiers({1, 1});
-
-    motorl->clearPositionCounter();
-    motorr->clearPositionCounter();
-
-    motorl->setAbsoluteTarget(0);
-    motorr->setAbsoluteTarget(0);
-
-    motorl->enablePositionControl();
-    motorr->enablePositionControl();
-
-
-
-    msleep(3000);
-    /*motorl->getPosition();
-    motorr->getPosition();
-    for (int i = 0; i < 1000; i++)
-    {
-        motorl->setAbsoluteTarget(i);
-        motorr->setAbsoluteTarget(i);
-        msleep(3);
-    }
-    for (int i = 1000; i > 0; i--)
-    {
-        motorl->setAbsoluteTarget(i);
-        motorr->setAbsoluteTarget(i);
-        msleep(3);
-    }*/
-    for (int i = 0; i < 20; i++)
-    {
-        engine.moveRelativePosition(500, 1000);
-        engine.awaitSequenceComplete();
-        msleep(1000);
-        engine.moveRelativePosition(500, -1000);
-        engine.awaitSequenceComplete();
-        msleep(1000);
-    }
-
-    /*engine.moveRelativePosition(1000, 200);
-    engine.awaitSequenceComplete(); msleep(5000);
-    engine.moveRelativePosition(-1000, 200);
-    engine.awaitSequenceComplete(); msleep(5000);
-    engine.moveRelativePosition(1000, 200);
-    engine.awaitSequenceComplete(); msleep(5000);
-    engine.moveRelativePosition(-1000, 200);
-    engine.awaitSequenceComplete(); msleep(5000);*/
-
-    motorl->disablePositionControl();
-    motorr->disablePositionControl();
-
+    go::nav->driveDistance(20);
+    go::nav->awaitTargetReached();
+    msleep(1000);
+    go::nav->rotateBy(M_PI_2);
+    go::nav->awaitTargetReached();
+    msleep(1000);
+    go::nav->driveDistance(20);
+    go::nav->awaitTargetReached();
+    msleep(1000);
+    go::nav->rotateBy(M_PI_2);
+    go::nav->awaitTargetReached();
+    msleep(1000);
+    go::nav->driveDistance(20);
+    go::nav->awaitTargetReached();
+    msleep(1000);
+    go::nav->rotateBy(M_PI_2);
+    go::nav->awaitTargetReached();
+    msleep(1000);
+    go::nav->driveDistance(20);
+    go::nav->awaitTargetReached();
+    msleep(1000);
+    go::nav->rotateBy(M_PI_2);
+    go::nav->awaitTargetReached();
+    
+    msleep(1000);
+    go::nav->terminate();
     kp::CreateMotor::globalCreateDisconnect();
+    delete go::nav;
 
     return 0;
     // shut_down_in(115);
