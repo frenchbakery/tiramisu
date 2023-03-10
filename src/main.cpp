@@ -417,9 +417,15 @@ int main()
         motorr->setAbsoluteTarget(i);
         msleep(3);
     }*/
-    engine.moveRelativePosition(100, 1000);
-    engine.awaitSequenceComplete();
-    msleep(3000);
+    for (int i = 0; i < 20; i++)
+    {
+        engine.moveRelativePosition(500, 1000);
+        engine.awaitSequenceComplete();
+        msleep(1000);
+        engine.moveRelativePosition(500, -1000);
+        engine.awaitSequenceComplete();
+        msleep(1000);
+    }
 
     /*engine.moveRelativePosition(1000, 200);
     engine.awaitSequenceComplete(); msleep(5000);
