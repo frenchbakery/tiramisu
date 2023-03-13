@@ -82,7 +82,24 @@ int main()
     go::nav->initialize();
     msleep(1000);
 
-    go::nav->driveDistance(20);
+    go::nav->driveVector(el::cart_t(20, -20));
+    go::nav->rotateBy(M_PI_2);
+    go::nav->rotateBy(-M_PI_2);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+    msleep(1000);
+
+    /*for (;;)
+    {
+        int x, y;
+        std::cout << "x, y = ";
+        scanf("%d, %d", &x, &y);
+        if (x == 1234) break;
+        go::nav->driveVector(el::cart_t(x, y));
+    }*/
+
+
+    /*go::nav->driveDistance(20);
     go::nav->awaitTargetReached();
     msleep(1000);
     go::nav->rotateBy(M_PI_2);
@@ -104,8 +121,9 @@ int main()
     go::nav->awaitTargetReached();
     msleep(1000);
     go::nav->rotateBy(M_PI_2);
-    go::nav->awaitTargetReached();
+    go::nav->awaitTargetReached();*/
     
+    create_stop();
     msleep(1000);
     go::nav->terminate();
     kp::CreateMotor::globalCreateDisconnect();

@@ -33,7 +33,7 @@
         "stopAtEntry": false,
         "cwd": "~/projects/tiramisu",
         "sourceFileMap": {
-            "/home/access/projects/croissant": "${workspaceFolder}"
+            "/home/access/projects/tiramisu": "${workspaceFolder}"
         },
         "environment": [],
         "externalConsole": true,
