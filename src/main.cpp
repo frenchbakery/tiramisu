@@ -45,8 +45,8 @@ void grab_cube(Analog &dist_sens, Servo &grab_serv, Arm &my_arm)
 {
     grab_serv.setPosition(1630);
 
-    my_arm.moveEllbowTo(48);
-    my_arm.moveShoulderToAngle(115);
+    my_arm.moveEllbowTo(70);
+    my_arm.moveShoulderToAngle(120);
 
     std::cout << "set stuff\n";
 
@@ -57,16 +57,16 @@ void grab_cube(Analog &dist_sens, Servo &grab_serv, Arm &my_arm)
     // program
     // get closer
     create_drive_straight(20);
-    while (dist_sens.value() < 2500)
+    while (dist_sens.value() < 1900)
     {
-        msleep(10);
-        create_drive_straight(40);
+        create_drive_straight(30);
+        Cam::look_at(YELLOW_CHANNEL, true);
     };
     create_stop();
 
     grab_serv.setPosition(1000);
     msleep(500);
-    my_arm.moveEllbowTo(80);
+    my_arm.moveEllbowTo(90);
     create_drive_straight(-100);
     msleep(1500);
     create_stop();
@@ -130,7 +130,7 @@ int main()
 
     // Gripper gripper(grab_servo, l_motor, r_motor, end_sensor);
 
-    int c_open = camera_open_device_model_at_res(0, BLACK_2017, Resolution::LOW_RES);
+    int c_open = camera_open_device_model_at_res(0, BLACK_2017, Resolution::MED_RES);
     camera_load_config("cubes.conf");
 
     Analog dist_sens(0);
@@ -140,18 +140,15 @@ int main()
     grab_serv.enable();
     turn_serv.enable();
 
-    turn_serv.setPosition(1024);
+
+    turn_serv.setPosition(1070);
     grab_serv.setPosition(1630);
 
-    get_create_total_angle();
 
     if (!create_connect() && c_open)
     {
-        // ss.setPosition(1900);
-        // return 0;
-
+        std::cout << "calibrating\n";
         my_arm.calibrate();
-        std::cout << "done calibrating\n";
 
         // center on cube
         grab_cube(dist_sens, grab_serv, my_arm);
@@ -215,9 +212,10 @@ int main()
     }
 
     std::cout << "done\n";
+    create_passive();
+    create_stop();
     create_disconnect();
     camera_close();
-    create_stop();
 
     return 0;
 }
