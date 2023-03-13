@@ -1,13 +1,30 @@
-#include "drivers/tiramisu/cam_funcs/cam_funcs.hpp"
-#include "drivers/tiramisu/grepper/grepper.hpp"
-#include "drivers/tiramisu/arm/arm.hpp"
+/**
+ * @file main.cpp
+ * @author Nilusink
+ * @brief contains tiramisu entry point
+ * @version 0.1
+ * @date 2023-03-10
+ * 
+ * @copyright Copyright FrenchBakery(c) 2023
+ * 
+ */
+
 #include <kipr/botball/botball.h>
 #include <kipr/analog/analog.hpp>
 #include <kipr/create/create.h>
 #include <kipr/create/create.hpp>
 #include <kipr/camera/camera.h>
 #include <kipr/time/time.h>
+#include <kiprplus/create_motor.hpp>
+#include <kiprplus/aggregation_engine.hpp>
 #include <iostream>
+#include <iomanip>
+#include <thread>
+#include "pitches.h"
+#include "drivers/navigation/tiramisu/tinav.hpp"
+#include "drivers/tiramisu/cam_funcs/cam_funcs.hpp"
+#include "drivers/tiramisu/grepper/grepper.hpp"
+#include "drivers/tiramisu/arm/arm.hpp"
 
 using namespace kipr::motor;
 using namespace kipr::servo;
@@ -15,6 +32,13 @@ using namespace kipr::digital;
 using namespace kipr::analog;
 
 #define ANGLE_MUlT 1 / 1.3
+
+
+namespace go
+{
+    Navigation *nav = nullptr;
+};
+
 
 
 void grab_cube(Analog &dist_sens, Servo &grab_serv, Arm &my_arm)
@@ -49,8 +73,45 @@ void grab_cube(Analog &dist_sens, Servo &grab_serv, Arm &my_arm)
 }
 
 
+
+
 int main()
 {
+    kp::CreateMotor::globalCreateConnect();
+    go::nav = new TINav;
+    go::nav->initialize();
+    msleep(1000);
+
+    go::nav->driveDistance(20);
+    go::nav->awaitTargetReached();
+    msleep(1000);
+    go::nav->rotateBy(M_PI_2);
+    go::nav->awaitTargetReached();
+    msleep(1000);
+    go::nav->driveDistance(20);
+    go::nav->awaitTargetReached();
+    msleep(1000);
+    go::nav->rotateBy(M_PI_2);
+    go::nav->awaitTargetReached();
+    msleep(1000);
+    go::nav->driveDistance(20);
+    go::nav->awaitTargetReached();
+    msleep(1000);
+    go::nav->rotateBy(M_PI_2);
+    go::nav->awaitTargetReached();
+    msleep(1000);
+    go::nav->driveDistance(20);
+    go::nav->awaitTargetReached();
+    msleep(1000);
+    go::nav->rotateBy(M_PI_2);
+    go::nav->awaitTargetReached();
+    
+    msleep(1000);
+    go::nav->terminate();
+    kp::CreateMotor::globalCreateDisconnect();
+    delete go::nav;
+
+    return 0;
     // shut_down_in(115);
 
     // initialize arm
@@ -110,7 +171,10 @@ int main()
         // drive to second cube
         set_create_distance(0);
         create_drive_straight(100);
-        while (get_create_distance() < 900) { msleep(10); };
+        while (get_create_distance() < 900)
+        {
+            msleep(10);
+        };
         create_stop();
         std::cout << "drove 900: " << get_create_distance() << "\n";
 
@@ -123,7 +187,10 @@ int main()
         create_spin_block(100, -90 * ANGLE_MUlT);
         set_create_distance(0);
         create_drive_straight(-100);
-        while (get_create_distance() > -900) { msleep(10); };
+        while (get_create_distance() > -900)
+        {
+            msleep(10);
+        };
         create_stop();
 
         create_spin_block(100, -90 * ANGLE_MUlT);
@@ -141,8 +208,8 @@ int main()
         grab_serv.setPosition(1100);
 
         msleep(1000);
-        // turn around and 
-   }
+        // turn around and
+    }
 
     std::cout << "done\n";
     create_passive();
