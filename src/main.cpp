@@ -82,7 +82,7 @@ int main()
     go::nav->initialize();
     msleep(1000);
 
-    go::nav->driveVector(el::cart_t(20, -20));
+    go::nav->driveVector(el::cart_t(20, -20), true);
     go::nav->rotateBy(M_PI_2);
     go::nav->rotateBy(-M_PI_2);
     go::nav->startSequence();
@@ -123,7 +123,6 @@ int main()
     go::nav->rotateBy(M_PI_2);
     go::nav->awaitTargetReached();*/
     
-    create_stop();
     msleep(1000);
     go::nav->terminate();
     kp::CreateMotor::globalCreateDisconnect();
