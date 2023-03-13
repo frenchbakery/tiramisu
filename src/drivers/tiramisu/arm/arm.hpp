@@ -56,7 +56,7 @@ class Arm
         const double ellbow_length = 29 * .8;
 
         // shoulder servo max values
-        const int shoulder_high = 1900;
+        const int shoulder_high = 2047;
         const int shoulder_90 = 1760;
         const int shoulder_low = 0;
 

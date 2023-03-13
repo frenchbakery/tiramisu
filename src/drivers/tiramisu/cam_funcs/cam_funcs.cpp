@@ -6,9 +6,12 @@
 
 
 #define MIN_SPEED 20
+#define TOLERANCE 2
+#define AIM_AT 80
+#define MAX_Y 40
 
 
-void Cam::look_at(uint8_t channel_id)
+void Cam::look_at(uint8_t channel_id, bool forward)
 {
     for (;;)
         {
@@ -24,7 +27,7 @@ void Cam::look_at(uint8_t channel_id)
                 for (int i = 0; i < y; i++)
                 {
                     int ar = get_object_area(YELLOW_CHANNEL, i);
-                    if (ar > curr_ma)
+                    if (ar > curr_ma && get_object_center_y(YELLOW_CHANNEL, i) < MAX_Y)
                     {
                         curr_ma = ar;
                         curr_ma_i = i;
@@ -35,28 +38,47 @@ void Cam::look_at(uint8_t channel_id)
                 int cen_x = get_object_center_x(YELLOW_CHANNEL, curr_ma_i);
                 int cen_y = get_object_center_y(YELLOW_CHANNEL, curr_ma_i);
 
-                std::cout << "bbox: " << cen_x << ", " << cen_y << " s: " << curr_ma << "\n";
+                std::cout << "off: " << cen_x - AIM_AT << ", height: " << cen_y << "\n";
                 // regulate to 32
-                if (cen_x < 78)
+                int speed = cen_x - AIM_AT;
+                int ccw_speed = (std::abs(speed) > MIN_SPEED) ? -speed : MIN_SPEED;
+                int cw_speed = (std::abs(speed) > MIN_SPEED) ? speed : MIN_SPEED;
+
+                if (cen_x < AIM_AT - TOLERANCE)
                 {
-                    create_spin_CCW((cen_x < 80 - MIN_SPEED) ? 80 - cen_x : MIN_SPEED);
+                    if (forward)
+                    {
+                        create_drive_direct(cw_speed, ccw_speed);
+                    }
+                    else
+                    {
+                        create_spin_CCW(ccw_speed);
+                    }
                 }
-                else if (cen_x > 82)
+                else if (cen_x > AIM_AT + TOLERANCE)
                 {
-                    create_spin_CW((cen_x > 90 + MIN_SPEED) ? cen_x - 80 : MIN_SPEED);
+                    if (forward)
+                    {
+                        create_drive_direct(cw_speed, ccw_speed);
+                    }
+                    else
+                    {
+                        create_spin_CW(cw_speed);
+                    }
                 }
                 else
                 {
                     // target found
                     std::cout << "found object: " << cen_x << "\n";
-                    create_stop();
                     return;
                 }
             }
             else
             {
-                create_stop();
                 std::cout << "nothing found\n";
+
+                if (forward)
+                    return;
             }
         }
 }
