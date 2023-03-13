@@ -1,6 +1,9 @@
+[submodule "src/drivers/navigation"]
+	path = src/drivers/navigation
+	url = https://github.com/frenchbakery/navigation
 [submodule "include/el-std"]
 	path = include/el-std
 	url = https://github.com/melektron/el-std.git
 [submodule "include/kiprplus"]
 	path = include/kiprplus
-	url = https://github.com/frenchbakery/kiprplus
+	url = https://github.com/frenchbakery/kiprplus.git
