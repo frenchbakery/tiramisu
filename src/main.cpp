@@ -82,6 +82,8 @@ int main()
     go::nav->initialize();
     msleep(1000);
 
+    
+
     /*go::nav->driveVector(el::cart_t(20, -20), true);
     go::nav->rotateBy(M_PI_2);
     go::nav->rotateBy(-M_PI_2);
@@ -89,7 +91,7 @@ int main()
     go::nav->awaitSequenceComplete();
     msleep(1000);*/
 
-    for (;;)
+    /*for (;;)
     {
         int x, y, bw;
         std::cout << "x, y, bw = ";
@@ -97,7 +99,7 @@ int main()
         if (x == 1234) break;
         go::nav->driveToPosition(el::cart_t(x, y), bw);
         go::nav->startSequence();
-    }
+    }*/
 
 
     /*go::nav->driveDistance(20);
