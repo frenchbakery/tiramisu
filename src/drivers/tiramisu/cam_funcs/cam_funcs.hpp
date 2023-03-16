@@ -10,5 +10,5 @@
 
 namespace Cam
 {
-    void look_at(uint8_t channel_id);
+    void look_at(uint8_t channel_id, bool forward = false);
 }

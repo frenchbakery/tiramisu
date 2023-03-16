@@ -4,222 +4,167 @@
 #include "arm.hpp"
 
 
-Arm::shoulder_angle_t Arm::servoAngleToShoulderAngle(Servo::ticks_t servo_pos)
+int Arm::shoulderAngleToServoPos(Arm::angle_t angle)
 {
-    // calculate the servos angle
-    angle_t servo_angle = 24 + map(servo_pos, 150, 1900, 13, 166.8);
+    // 0...2047, 90...1024, 180...0
+    return 2047 - 2047 * (angle / 180);
 }
 
 
-Arm::angle_t Arm::shoulderAngleToServoAngle(Arm::shoulder_angle_t angle)
+Arm::Arm(
+            int motor_pin,
+            int shoulder_servo_pin,
+            int wrist_servo_pin,
+            int grab_servo_pin,
+            int end_switch_pin,
+            int start_switch_pin
+)
+    :   ellbow_motor(motor_pin, 512),
+        shoulder_servo(shoulder_servo_pin),
+        wrist_servo(wrist_servo_pin),
+        grab_servo(grab_servo_pin),
+        max_switch(end_switch_pin),
+        min_switch(start_switch_pin)
 {
-    // calculate first angle and convert the given on into radian
-    double alpha = servo_off_angle + (90 - (angle * (M_PI / 180)));
+    // enable servos
+    shoulder_servo.enable();
+    wrist_servo.enable();
+    grab_servo.enable();
 
-    // first side (connection_pos to servo_pos)
-    double a = sqrt(
-        pow(servo_off_len, 2)
-        - 2 * servo_off_len * shoulder_connector_height
-        * cos(alpha) + pow(shoulder_connector_height, 2)
-    );
-
-    // first half of servo angle
-    double phi1 = acos(
-        (pow(a, 2) - pow(shoulder_connector_height, 2)
-        + pow(servo_off_len, 2))
-        / (2 * servo_off_len * a)
-    );
-
-    // second half of servo angle
-    double phi2 = acos(
-        (- pow(shoulder_connector_length, 2) + pow(shoulder_servo_length, 2)
-        + pow(a, 2))
-        / (2 * shoulder_servo_length * a)
-    );
-
-    // return full angle in degrees
-    return (phi1 + phi2) * (180 / M_PI);
-}
-
-
-Arm::ellbow_angle_t motorPercToAngle(Arm::perc_value_t motor_perc)
-{
-
-}
-
-
-Arm::perc_value_t angleToMotorPerc(Arm::ellbow_angle_t angle)
-{
-
-}
-
-
-Arm::Arm(BackEMF &emf, Motor &ellbow, Servo &shoulder, Digital &end_switch, Digital &start_switch)
- : ellbow_emf(emf), ellbow_motor(ellbow), shoulder_servo(shoulder), max_switch(end_switch), min_switch(start_switch)
-{
-    // -1 means not calibrated
-    current_position = -1;
-    pos_delta = -1;
-
-    // enable servo
-    shoulder.enable();
+    // set speeds
+    shoulder_servo.setSpeed(256);
+    wrist_servo.setSpeed(256);
+    grab_servo.setSpeed(1024);
 }
 
 
 void Arm::calibrate()
 {
-    ellbow_motor.moveAtVelocity(calibrate_speed);
-
-    // wait for motor to finish
-    while (!max_switch.value()) {msleep(10);};
-    ellbow_motor.off();
-
-    // move shoulder to 90°
-    int diff = shoulder_servo.position() - shoulder_high;
-    for (;diff < 0; diff++)
-    {
-        shoulder_servo.setPosition(shoulder_high + diff);
-        msleep(2);
-    }
-    shoulder_servo.setPosition(shoulder_high);
-
-    ellbow_motor.moveAtVelocity(calibrate_speed);
-
-    // wait for motor to finish
-    while (!max_switch.value()) {msleep(10);};
-    ellbow_motor.off();
-
-    int times_moved = 0;
-
-    // wait for motor to finish
-    ellbow_motor.clearPositionCounter();
+    int wrist_speed = wrist_servo.getSpeed();
+    wrist_servo.setSpeed(300);
+    // - is up
+    wrist_servo.setPosition(300);
+    shoulder_servo.setPosition(1024);
     ellbow_motor.moveAtVelocity(-calibrate_speed);
-    while (!min_switch.value()) {msleep(10);};
-    // {
-        // ellbow_motor.clearPositionCounter();
-        // ellbow_motor.moveToPosition(-100, -calibrate_accuracy);
 
-        // times_moved++;        
-        // while (!ellbow_motor.isMotorDone()) {};
-    // };
-    ellbow_motor.off();
-
-    // pos_delta = times_moved * calibrate_accuracy;
-    pos_delta = -ellbow_emf.value();
-    ellbow_motor.clearPositionCounter();
-
-    ellbow_motor.moveToPosition(100, 50);
-    msleep(300);
-
-    current_position = 0;
-}
-
-void Arm::moveEllbowTo(Arm::perc_value_t position_perc, float speed)
-{
-    if (pos_delta == 0)
+    // wait for motor to hit end switch
+    bool set_wrist_down = false;
+    while (!max_switch.value())
     {
-        return;
-    }
+        int shoulder_pos = shoulder_servo.position();
 
-    float wanted_position = pos_delta * (position_perc / 100);
-    float delta = wanted_position - current_position;
+        if (624 < shoulder_pos && shoulder_pos < 1424 && !set_wrist_down)
+        {
+            set_wrist_down = true;
+            moveWristToRelativeAngle(-90);
+        }
 
-    ellbow_motor.clearPositionCounter();
-    ellbow_motor.moveToPosition(speed, delta);
-
-    std::cout << "range: " << pos_delta << ", moving to: " << wanted_position << " arg: " << position_perc << "\n";
-
-    // wait for leaving end switches
-    while (max_switch.value() || min_switch.value()) {msleep(10);};
-    while (!ellbow_motor.isMotorDone())
-    {
         msleep(10);
-
-        // end position switches are triggered
-        if (max_switch.value() || min_switch.value())
-        {
-            std::cout << "end\n";
-            ellbow_motor.off();
-            for (;;) {msleep(10);};
-        }
     }
 
-    std::cout << "done\n";
+    ellbow_motor.clearPositionCounter();
+    ellbow_motor.moveAtVelocity(calibrate_speed);
+    moveWristToRelativeAngle(70);
 
-    // make sure the motor is off
+    // wait for motor to hit end switch
+    while (!min_switch.value()) { msleep(10); }
     ellbow_motor.off();
-    current_position += delta;
+    msleep(500);
+
+    motor_range = -ellbow_motor.getPosition();
+    std::cout << "motor range: " << motor_range << std::endl;
+    ellbow_motor.clearPositionCounter();
+    ellbow_motor.enablePositionControl();
+    ellbow_motor.setAbsoluteTarget(-100);
+
+    // reset wrist servo speed
+    awaitWristDone();
+    wrist_servo.setSpeed(wrist_speed);
 }
 
-void Arm::moveShoulderTo(Arm::perc_value_t position_perc, short speed)
+void Arm::moveEllbowTo(Arm::perc_value_t position_perc)
 {
-    double wanted_pos = (position_perc / 100) * (shoulder_high - shoulder_low) + shoulder_low;
-
-    // move shoulder
-    int diff = shoulder_servo.position() - wanted_pos;
-    for (;diff < 0; diff++)
-    {
-        shoulder_servo.setPosition(shoulder_high + diff);
-        msleep(10 / speed);
-
-        // check if min / max end switches are touched
-        if (max_switch.value() || min_switch.value())
-        {
-            return;
-        }
-    }
-
-    // last step
-    shoulder_servo.setPosition(wanted_pos);
+    std::cout << position_perc << " moving to: " << (position_perc / 100) * motor_range << std::endl;
+    ellbow_motor.enablePositionControl();
+    ellbow_motor.setAbsoluteTarget((position_perc / 100) * motor_range);
 }
 
-
-void Arm::moveShoulderToAngle(Arm::shoulder_angle_t angle, short speed)
+void Arm::moveWristToRelativeAngle(Arm::angle_t angle)
 {
-    angle += 5;
-    double servo_angle = shoulderAngleToServoAngle(angle);
-    Servo::ticks_t servo_pos = map(servo_angle - 13, 13, 167, 150, 1900);
+    wrist_servo.setPosition((-angle / 90) * 1024 + 1024);
+}
 
-    std::cout << "servo: " << servo_pos << "\n";
+void Arm::moveShoulderTo(Arm::perc_value_t position_perc)
+{
+    shoulder_servo.setPosition((position_perc / 100) * 2047);
+}
 
-    if (servo_pos > 2047)
-    {
-        servo_pos = 2047;
-    }
+void Arm::moveShoulderToAngle(Arm::angle_t angle)
+{
+    shoulder_servo.setPosition((angle / 180) * 2047);
+}
 
-    // move shoulder
-    int initial = shoulder_servo.position();
-    int diff = initial - servo_pos;
+void Arm::awaitShoulderDone()
+{
+    shoulder_servo.waitUntilComleted();
+}
+void Arm::awaitEllbowDone()
+{
+    ellbow_motor.blockMotorDone();
+}
+void Arm::awaitWristDone()
+{
+    wrist_servo.waitUntilComleted();
+}
+void Arm::awaitGripperDone()
+{
+    wrist_servo.waitUntilComleted();
+}
 
-    for (int i = 0; i < diff; i++)
-    {
-        shoulder_servo.setPosition(initial - i);
-        msleep(map(speed, 0, 100, 10, 0));
-
-        // check if min / max end switches are touched
-        if (max_switch.value() || min_switch.value())
-        {
-            return;
-        }
-    }
-    for (int i = 0; i > diff; i--)
-    {
-        shoulder_servo.setPosition(initial - i);
-        msleep(map(speed, 0, 100, 10, 0));
-
-        // check if min / max end switches are touched
-        if (max_switch.value() || min_switch.value())
-        {
-            return;
-        }
-    }
-
-    // last step
-    shoulder_servo.setPosition(servo_pos);
+void Arm::setShoulderSpeed(int speed)
+{
+    shoulder_servo.setSpeed(speed);
+}
+void Arm::setWristSpeed(int speed)
+{
+    wrist_servo.setSpeed(speed);
+}
+void Arm::setGripperSpeed(int speed)
+{
+    grab_servo.setSpeed(speed);
 }
 
 
-void Arm::grabCube()
+void Arm::park()
 {
-    return;
+    // reset speeds
+    wrist_servo.setSpeed(256);
+    shoulder_servo.setSpeed(256);
+    grab_servo.setSpeed(512);
+
+    grab_servo.setPosition(grab_parked);
+    wrist_servo.setPosition(300);
+    shoulder_servo.setPosition(shoulder_parked);
+    moveEllbowTo(ellbow_parked);
+
+    awaitShoulderDone();
+    moveWristToRelativeAngle(wrist_parked);
+    awaitWristDone();
+}
+
+
+void Arm::unpark()
+{
+    // reset speeds
+    wrist_servo.setSpeed(256);
+    shoulder_servo.setSpeed(256);
+    grab_servo.setSpeed(1024);
+
+    moveWristToRelativeAngle(0);
+    moveEllbowTo(50);
+    shoulder_servo.setPosition(1024);
+
+    awaitShoulderDone();
+    grab_servo.setPosition(1024);
+    awaitEllbowDone();
 }
