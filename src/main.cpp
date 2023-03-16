@@ -82,6 +82,9 @@ int main()
     go::nav->initialize();
     msleep(1000);
 
+    int a;
+    std::cin >> a;
+
     
 
     /*go::nav->driveVector(el::cart_t(20, -20), true);
