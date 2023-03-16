@@ -31,7 +31,7 @@
         "program": "run/main",
         "args": [],
         "stopAtEntry": false,
-        "cwd": "~/projects/tiramisu",
+        "cwd": "~/projects/tiramisu_arm",
         "sourceFileMap": {
             "/home/access/projects/tiramisu": "${workspaceFolder}"
         },

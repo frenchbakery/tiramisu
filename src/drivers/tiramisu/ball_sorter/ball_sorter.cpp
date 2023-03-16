@@ -15,11 +15,18 @@ BallSorter::BallSorter(int motor_pin, int servo_pin, int switch_pin)
     : turn_motor(motor_pin), push_servo(servo_pin, initial_servo_pos), end_switch(switch_pin)
 {
     push_servo.enable();
+    push_servo.setSpeed(65553);
 };
 
 
 void BallSorter::calibrate()
 {
+    // if on end switch, move back a bit
+    if (end_switch.value())
+    {
+        turn_motor.moveAtVelocity(100);
+        msleep(1000);
+    }
     // reset servo
     resetPusher();
 
@@ -74,4 +81,16 @@ void BallSorter::resetPusher()
 void BallSorter::setServoSpeed(int speed)
 {
     push_servo.setSpeed(speed);
+}
+
+
+void BallSorter::waitForMotor()
+{
+    turn_motor.blockMotorDone();
+}
+
+
+void BallSorter::waitForServo()
+{
+    push_servo.waitUntilComleted();
 }
