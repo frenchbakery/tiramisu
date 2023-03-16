@@ -587,12 +587,13 @@ EXPORT_SYM void create_spin_block(int speed, int angle);
 
 /*!
  * Gets the displacement of the left wheel and right wheel and
- * puts that data into the `short`s provided
+ * puts that data into the `long`s provided
  * \param[out] lenc - where the left wheel's displacement is stored
  * \param[out] renc - where the right wheel's displacement is stored 
+ * \note Not yet implemented
  * \ingroup create
  */
-EXPORT_SYM int _create_get_raw_encoders(signed short *lenc, signed short *renc);
+EXPORT_SYM int _create_get_raw_encoders(long *lenc, long *renc);
 
 /*!
  * Loads a song for playing on the create

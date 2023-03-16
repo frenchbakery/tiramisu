@@ -23,41 +23,6 @@
                 "ignoreFailures": true
             }
         ]
-    },
-    {
-        "name": "Launch Remote (gdb)",
-        "type": "cppdbg",
-        "request": "launch",
-        "program": "run/main",
-        "args": [],
-        "stopAtEntry": false,
-        "cwd": "~/projects/tiramisu",
-        "sourceFileMap": {
-            "/home/access/projects/croissant": "${workspaceFolder}"
-        },
-        "environment": [],
-        "externalConsole": true,
-        "MIMode": "gdb",
-        "setupCommands": [
-            {
-                "description": "Enable pretty-printing for gdb",
-                "text": "-enable-pretty-printing",
-                "ignoreFailures": true
-            },
-            {
-                "description":  "Set Disassembly Flavor to Intel",
-                "text": "-gdb-set disassembly-flavor intel",
-                "ignoreFailures": true
-            }
-        ],
-        "pipeTransport": {
-            "pipeCwd": "/usr/bin",
-            "pipeProgram": "/usr/bin/ssh",
-            "pipeArgs": [
-                "access@192.168.4.42"
-            ],
-            "debuggerPath": "/usr/bin/gdb"
-        },
     }
     ]
 
