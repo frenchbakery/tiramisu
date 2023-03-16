@@ -69,13 +69,6 @@ int main()
     go::nav = new TINav;
     go::nav->initialize();
 
-    go::nav->rotateBy(M_PI * 4);
-    msleep(10000);
-
-    go::nav->rotateBy(-M_PI * 4);
-    msleep(10000);
-
-    return 0;
     camera_open_device_model_at_res(0, BLACK_2017, Resolution::MED_RES);
     camera_load_config("cubes.conf");
 
@@ -131,18 +124,28 @@ int main()
     if (bal_cal_thread.joinable())
         bal_cal_thread.join();
 
-    while (light.value() > ambient_light - (light_range)) msleep(10);
+    // while (light.value() > ambient_light - (light_range * .7)) msleep(10);
+    int trash;
+    std::cout << CLR_GREEN << "start? " << CLR_RESET;
+    std::cin >> trash;
+    std::cout << std::endl;
 
     go::arm->moveGripperTo(100);
     go::arm->moveWristToRelativeAngle(90);
     go::arm->awaitWristDone();
+
     navigation_sequences::remove_first_pom();
     go::nav->startSequence();
-    std::cout << CLR_BLUE << "waiting for pom sequence" << CLR_RESET << std::endl;
-    go::nav->awaitSequenceComplete();
 
-    go::arm->moveGripperTo(0);;
-    go::arm->unpark();
+    std::cout << CLR_BLUE << "waiting for pom sequence" << CLR_RESET << std::endl;
+    msleep(6000);
+
+    go::arm->moveShoulderToAngle(go::arm->shoulder_90);
+    go::arm->moveEllbowTo(70);
+    go::arm->moveGripperTo(90);
+    go::arm->moveWristToRelativeAngle(90);
+
+    go::nav->awaitSequenceComplete();
     go::arm->awaitAllDone();
 
     go::arm->moveEllbowTo(95);
@@ -150,14 +153,23 @@ int main()
     go::arm->awaitAllDone();
 
     // rotate to cube
-    double off_a = 0;
-    for (int i = 0; i < 2; i++)
+    double off_a;
+    for (int i = 0; i < 10; i++)
+    {
         off_a = Cam::look_at(0);
+        if (off_a != 69420.f)
+            break;
+    }
 
     if (off_a == 69420.f)
     {   // cube not found
         go::arm->moveGripperTo(100);
         std::cout << CLR_RED << "Cube 1 not found!" << CLR_RESET << std::endl;
+
+        std::cout << CLR_GREEN << "MATSE: " << CLR_RESET;
+        std::cin >> trash;
+        std::cout << std::endl;
+
         navigation_sequences::yellow_cubes::alternate_drop_first_cube();
         go::nav->startSequence();
         go::nav->awaitSequenceComplete();
@@ -171,13 +183,13 @@ int main()
         go::nav->awaitSequenceComplete();
         std::cout << "moved by " << off_a * (180 / M_PI) << "°\n";
 
-        go::nav->driveDistance(8);
+        go::nav->driveDistance(12);
         go::nav->startSequence();
         go::nav->awaitSequenceComplete();
 
         std::cout << "gripping\n";
 
-        go::arm->moveGripperTo(95);;
+        go::arm->moveGripperTo(100);;
         go::arm->awaitGripperDone();
 
         msleep(200);
@@ -185,9 +197,14 @@ int main()
         go::arm->moveWristToRelativeAngle(0);
         go::arm->awaitWristDone();
 
+        go::nav->driveDistance(-12);
         go::nav->rotateBy(-off_a);
         go::nav->startSequence();
         go::nav->awaitSequenceComplete();
+
+        std::cout << CLR_GREEN << "MATSE: " << CLR_RESET;
+        std::cin >> trash;
+        std::cout << std::endl;
 
         navigation_sequences::yellow_cubes::drop_first_cube();
         std::cout << CLR_BLUE << "waiting for cube drop 1 sequence" << CLR_RESET << std::endl;
@@ -215,8 +232,12 @@ int main()
     go::arm->awaitAllDone();
 
     // rotate to cube
-    for (int i = 0; i < 100; i++)
+    for (int i = 0; i < 10; i++)
+    {
         off_a = Cam::look_at(0);
+        if (off_a != 69420.f)
+            break;
+    }
 
     if (off_a == 69420.f)
     {   // cube not found
