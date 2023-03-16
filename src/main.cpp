@@ -11,6 +11,7 @@
 #include "routines/create.hpp"
 #include "global_objects.hpp"
 #include "term_colors.h"
+#include <iostream>
 
 #define BALL_MOTOR_PORT 1
 #define BALL_SERVO_PIN 0
@@ -68,6 +69,11 @@ int main()
     int current_stack = 0;
     go::nav = new TINav;
     go::nav->initialize();
+
+    align_wall();
+    go::nav->driveDistance(-10);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
 
     camera_open_device_model_at_res(0, BLACK_2017, Resolution::MED_RES);
     camera_load_config("cubes.conf");

@@ -44,6 +44,66 @@ void drive_until_bumper(int speed = 50)
 }
 
 
+void align_wall(int accuracy = 2, int speed = 25)
+{
+    bool l_b, r_b, ll_b, lr_b;
+    go::nav->disablePositionControl();
+
+    int i = 0;
+    for (;;)
+    {
+        std::cout << i << std::endl;
+        {
+            std::lock_guard lock(kp::CreateMotor::create_access_mutex);
+            l_b = get_create_lbump();
+            r_b = get_create_rbump();
+        }
+
+        if (l_b && r_b)
+        {
+            go::nav->driveLeftSpeed(-speed);
+            go::nav->driveRightSpeed(-speed);
+        }
+        else if (!(l_b || r_b))
+        {
+            if (ll_b && lr_b)
+            {
+                i++;
+            }
+            go::nav->driveLeftSpeed(speed);
+            go::nav->driveRightSpeed(speed);
+        }
+        else if (l_b)
+        {
+            go::nav->driveLeftSpeed(-speed);
+            go::nav->driveRightSpeed(speed);
+        }
+        else if (r_b)
+        {
+            go::nav->driveLeftSpeed(speed);
+            go::nav->driveRightSpeed(-speed);
+        }
+        else
+        {
+            go::nav->driveLeftSpeed(0);
+            go::nav->driveRightSpeed(0);
+        }
+
+        if (i >= accuracy)
+        {
+            go::nav->driveLeftSpeed(0);
+            go::nav->driveRightSpeed(0);
+            go::nav->resetPositionControllers();
+            go::nav->enablePositionControl();
+            return;
+        }
+ 
+        ll_b = l_b;
+        lr_b = r_b;
+    }
+}
+
+
 /**
  * @brief initial calibration of the creates position
  * 
