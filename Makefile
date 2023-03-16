@@ -4,6 +4,8 @@ CARG =
 LARG = 
 USER = access
 HOST = 10.42.0.149
+LCORES =-j4
+RCORES =-j2
 
 # include environment configuration that includes deployment
 # host and user name, compiler flags and other config
@@ -13,14 +15,15 @@ include env.mk
 # project structure
 SRC_DIR = src
 INCLUDE_DIR = include
+DEV_INCLUDE = devinclude
 OBJ_DIR = obj
 RUN_DIR = run
 MOUNT_FOLDER = mount
 WORKSPACE_NAME = $(shell basename ${PWD})
 
-# C++ configuration
-CC = g++
-CFLAGS = -g -I$(INCLUDE_DIR) -I$(SRC_DIR) $(CARG) -std=c++17
+# C++ configurations
+CC = aarch64-linux-gnu-g++
+CFLAGS = -g -I$(ADDINC) -I$(INCLUDE_DIR) -I$(SRC_DIR) $(CARG) -std=c++17
 LIBS = -lpthread -lkipr $(LARG)
 
 # files and compliation results
@@ -33,6 +36,8 @@ INCLUDE_OBJECTS_TEMP = $(patsubst %.cpp,%.o,$(INCLUDE_SOURCES))
 INCLUDE_OBJECTS = $(patsubst $(INCLUDE_DIR)/%,$(OBJ_DIR)/include/%,$(INCLUDE_OBJECTS_TEMP))
 
 EXECUTABLE = $(RUN_DIR)/main
+
+REMOTE_OBJECTS = $(shell find $(OBJ_DIR) -name '*.o')
 
 ## == Compilation
 
@@ -51,6 +56,14 @@ $(OBJ_DIR)/include/%.o: $(INCLUDE_DIR)/%.cpp
 	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
+# links pre-copied objects on the remote target (hybrid link)
+hlink: $(REMOTE_OBJECTS)
+	mkdir -p $(RUN_DIR)
+	$(CC) $(REMOTE_OBJECTS) -o $(EXECUTABLE) $(LIBS)
+
+
+## == Local object compilation
+local_compile: $(SRC_OBJECTS) $(INCLUDE_OBJECTS)
 
 ## == Remote target management
 
@@ -60,13 +73,24 @@ remote_start:
 
 # envoke build on remote target
 remote_build:
-	ssh $(USER)@$(HOST) "bash -c \"cd projects/$(WORKSPACE_NAME) && make -j2\""
+	ssh $(USER)@$(HOST) "bash -c \"cd projects/$(WORKSPACE_NAME) && make $(RCORES)\""
+
+# envoke hlink on remote target
+remote_hlink:
+	ssh $(USER)@$(HOST) "bash -c \"cd projects/$(WORKSPACE_NAME) && make hlink\""
 
 # copy sources and Makefile to remote target
-copy_files:
+copy_sources:
 	ssh $(USER)@$(HOST) "rm -rf projects/$(WORKSPACE_NAME)/* && mkdir -p projects/$(WORKSPACE_NAME)/$(SRC_DIR) && mkdir -p projects/$(WORKSPACE_NAME)/$(INCLUDE_DIR)"
 	scp -r ../$(WORKSPACE_NAME)/$(SRC_DIR) $(USER)@$(HOST):projects/$(WORKSPACE_NAME)/
 	scp -r ../$(WORKSPACE_NAME)/$(INCLUDE_DIR) $(USER)@$(HOST):projects/$(WORKSPACE_NAME)/
+	scp -r ../$(WORKSPACE_NAME)/Makefile $(USER)@$(HOST):projects/$(WORKSPACE_NAME)/Makefile
+	scp -r ../$(WORKSPACE_NAME)/env.mk $(USER)@$(HOST):projects/$(WORKSPACE_NAME)/env.mk
+
+# copy compiled objects and Makefile to remote target
+copy_objects:
+	ssh $(USER)@$(HOST) "rm -rf projects/$(WORKSPACE_NAME)/* && mkdir -p projects/$(WORKSPACE_NAME)/$(SRC_DIR) && mkdir -p projects/$(WORKSPACE_NAME)/$(INCLUDE_DIR)"
+	scp -r ../$(WORKSPACE_NAME)/$(OBJ_DIR) $(USER)@$(HOST):projects/$(WORKSPACE_NAME)/
 	scp -r ../$(WORKSPACE_NAME)/Makefile $(USER)@$(HOST):projects/$(WORKSPACE_NAME)/Makefile
 	scp -r ../$(WORKSPACE_NAME)/env.mk $(USER)@$(HOST):projects/$(WORKSPACE_NAME)/env.mk
 
@@ -87,14 +111,26 @@ keycopy:
 
 # quickly copy files to target, compile and start on target
 start:
-	make copy_files
+	make copy_sources
 	make remote_build
+	make remote_start
+
+hstart: 
+	make local_compile $(LCORES) ADDINC=$(DEV_INCLUDE)
+	make copy_objects
+	make remote_hlink
 	make remote_start
 
 # quickly copy files to target and compile them
 build:
-	make copy_files
+	make copy_sources
 	make remote_build
+
+# localy builds objects, then copies them to the target and links them there
+hbuild:
+	make local_compile $(LCORES) ADDINC=$(DEV_INCLUDE)
+	make copy_objects
+	make remote_hlink
 
 # mount the 
 mount:
