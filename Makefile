@@ -4,6 +4,8 @@ CARG =
 LARG = 
 USER = access
 HOST = 10.42.0.149
+LCORES =-j4
+RCORES =-j2
 
 # include environment configuration that includes deployment
 # host and user name, compiler flags and other config
@@ -71,7 +73,7 @@ remote_start:
 
 # envoke build on remote target
 remote_build:
-	ssh $(USER)@$(HOST) "bash -c \"cd projects/$(WORKSPACE_NAME) && make -j2\""
+	ssh $(USER)@$(HOST) "bash -c \"cd projects/$(WORKSPACE_NAME) && make $(RCORES)\""
 
 # envoke hlink on remote target
 remote_hlink:
@@ -114,7 +116,7 @@ start:
 	make remote_start
 
 hstart: 
-	make local_compile ADDINC=$(DEV_INCLUDE)
+	make local_compile $(LCORES) ADDINC=$(DEV_INCLUDE)
 	make copy_objects
 	make remote_hlink
 	make remote_start
@@ -126,7 +128,7 @@ build:
 
 # localy builds objects, then copies them to the target and links them there
 hbuild:
-	make local_compile ADDINC=$(DEV_INCLUDE)
+	make local_compile $(LCORES) ADDINC=$(DEV_INCLUDE)
 	make copy_objects
 	make remote_hlink
 

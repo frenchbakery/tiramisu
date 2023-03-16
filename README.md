@@ -43,6 +43,10 @@ You can also add further configurations in this file such as additional compiler
 CARG = -DSOME_DEFINE
 # example for a linker argument (more can be added)
 LARG = -lmylibrary
+# number of cores to use for local compilation
+LCORES =-j4
+# number of cores to use for remote compilation
+RCORES =-j2
 ```
 
 For any value not specified int the ```env.mk``` file, one of the following defaults will be used:
@@ -52,6 +56,8 @@ CARG =
 LARG = 
 USER = access
 HOST = 10.42.0.149
+LCORES =-j4
+RCORES =-j2
 ```
 
 ### Remote access
