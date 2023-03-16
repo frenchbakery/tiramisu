@@ -21,6 +21,12 @@ BallSorter::BallSorter(int motor_pin, int servo_pin, int switch_pin)
 
 void BallSorter::calibrate()
 {
+    // if on end switch, move back a bit
+    if (end_switch.value())
+    {
+        turn_motor.moveAtVelocity(100);
+        msleep(1000);
+    }
     // reset servo
     resetPusher();
 

@@ -1,14 +1,15 @@
 #include <kipr/time/time.h>
+#include "term_colors.h"
 #include "utils.hpp"
 #include <iostream>
 #include "arm.hpp"
 
 
-int Arm::shoulderAngleToServoPos(Arm::angle_t angle)
-{
-    // 0...2047, 90...1024, 180...0
-    return 2047 - 2047 * (angle / 180);
-}
+// int Arm::shoulderAngleToServoPos(Arm::angle_t angle)
+// {
+//     // 0...2047, 90...1024, 180...0
+//     return 2047 - 2047 * (angle / 180);
+// }
 
 
 Arm::Arm(
@@ -40,11 +41,12 @@ Arm::Arm(
 
 void Arm::calibrate()
 {
+    grab_servo.setPosition(1024);
     int wrist_speed = wrist_servo.getSpeed();
     wrist_servo.setSpeed(300);
     // - is up
     wrist_servo.setPosition(300);
-    shoulder_servo.setPosition(1024);
+    shoulder_servo.setPosition(shoulder_90);
     ellbow_motor.moveAtVelocity(-calibrate_speed);
 
     // wait for motor to hit end switch
@@ -80,11 +82,11 @@ void Arm::calibrate()
     // reset wrist servo speed
     awaitWristDone();
     wrist_servo.setSpeed(wrist_speed);
+    grab_servo.setPosition(1024);
 }
 
 void Arm::moveEllbowTo(Arm::perc_value_t position_perc)
 {
-    std::cout << position_perc << " moving to: " << (position_perc / 100) * motor_range << std::endl;
     ellbow_motor.enablePositionControl();
     ellbow_motor.setAbsoluteTarget((position_perc / 100) * motor_range);
 }
@@ -96,12 +98,25 @@ void Arm::moveWristToRelativeAngle(Arm::angle_t angle)
 
 void Arm::moveShoulderTo(Arm::perc_value_t position_perc)
 {
-    shoulder_servo.setPosition((position_perc / 100) * 2047);
+    shoulder_servo.setPosition(shoulder_min + (position_perc / 100) * (shoulder_max - shoulder_min));
 }
 
 void Arm::moveShoulderToAngle(Arm::angle_t angle)
 {
-    shoulder_servo.setPosition((angle / 180) * 2047);
+    shoulder_servo.setPosition(angle);
+    std::cout << CLR_RED << "move by angle not implemented" << CLR_RESET << std::endl;
+    // shoulder_servo.setPosition((angle / 180) * 2047);
+}
+
+void Arm::moveGripperTo(perc_value_t position_perc)
+{
+    grab_servo.setPosition(position_perc * 20.47);
+}
+
+
+double getShoulderAngle()
+{
+    return 0;
 }
 
 void Arm::awaitShoulderDone()
@@ -118,7 +133,14 @@ void Arm::awaitWristDone()
 }
 void Arm::awaitGripperDone()
 {
-    wrist_servo.waitUntilComleted();
+    grab_servo.waitUntilComleted();
+}
+void Arm::awaitAllDone()
+{
+    awaitShoulderDone();
+    awaitGripperDone();
+    awaitEllbowDone();
+    awaitWristDone();
 }
 
 void Arm::setShoulderSpeed(int speed)
@@ -142,9 +164,8 @@ void Arm::park()
     shoulder_servo.setSpeed(256);
     grab_servo.setSpeed(512);
 
-    grab_servo.setPosition(grab_parked);
     wrist_servo.setPosition(300);
-    shoulder_servo.setPosition(shoulder_parked);
+    shoulder_servo.setPosition(shoulder_min);
     moveEllbowTo(ellbow_parked);
 
     awaitShoulderDone();
@@ -162,9 +183,6 @@ void Arm::unpark()
 
     moveWristToRelativeAngle(0);
     moveEllbowTo(50);
-    shoulder_servo.setPosition(1024);
-
+    shoulder_servo.setPosition(shoulder_90);
     awaitShoulderDone();
-    grab_servo.setPosition(1024);
-    awaitEllbowDone();
 }

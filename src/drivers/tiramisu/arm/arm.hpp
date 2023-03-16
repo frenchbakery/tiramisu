@@ -8,6 +8,7 @@
  * @copyright Copyright FrenchBakery (c) 2023
  * 
  */
+#pragma once
 #include <kipr/digital/digital.hpp>
 #include <kiprplus/smooth_servo.hpp>
 #include <kiprplus/pid_motor.hpp>
@@ -27,6 +28,9 @@ class Arm
         typedef float perc_value_t;  // value between 0 and 100
         typedef kp::SmoothServo Servo;
         typedef kp::PIDMotor Motor;
+        const int shoulder_max = 1800;
+        const int shoulder_90 = 1140;
+        const int shoulder_min = 60;
 
     protected:
         Servo shoulder_servo;
@@ -37,15 +41,15 @@ class Arm
         Digital min_switch;
 
         // calibration configuration
-        double calibrate_speed = 512;
+        double calibrate_speed = 750;
 
         // ellbow positional data
         double current_position;
 
         const int shoulder_parked = 1700;
-        const int ellbow_parked = 18;
-        const int wrist_parked = -55;
-        const int grab_parked = 2047;
+        const int ellbow_parked = 20;
+        const int wrist_parked = -65;
+        const int grab_parked = 1024;
 
         /**
          * @brief calculate the servo position given the desired angle
@@ -101,6 +105,8 @@ class Arm
          */
         void moveWristToRelativeAngle(angle_t angle);
 
+        void moveGripperTo(perc_value_t position_perc);
+
         // properties
         double getShoulderAngle();
 
@@ -108,6 +114,7 @@ class Arm
         void awaitEllbowDone();
         void awaitWristDone();
         void awaitGripperDone();
+        void awaitAllDone();
 
         void setShoulderSpeed(int speed);
         void setWristSpeed(int speed);
