@@ -25,7 +25,7 @@
 #define ARM_MAX_PIN 8
 #define ARM_MIN_PIN 7
 #define LIGHT_PIN 5
-#define DIST_PIN 0
+#define DIST_PIN 1
 #define LINE_PIN 0
 
 #define CAM_LOOP_N 20
@@ -38,6 +38,7 @@ int light_range = -1;
 namespace go
 {
     kipr::analog::Analog *line;
+    kipr::analog::Analog *dist;
     BallSorter *balls;
     TINav *nav;
     Arm *arm;
@@ -52,6 +53,7 @@ int main()
     go::nav->initialize();
 
     go::line = new kipr::analog::Analog(LINE_PIN);
+    go::dist = new kipr::analog::Analog(DIST_PIN);
 
     camera_open_device_model_at_res(0, BLACK_2017, Resolution::MED_RES);
     camera_load_config("cubes.conf");

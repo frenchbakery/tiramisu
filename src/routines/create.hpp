@@ -11,6 +11,7 @@
 #include "global_objects.hpp"
 #include <kipr/create/create.h>
 #include <kipr/time/time.h>
+#include "term_colors.h"
 #include <iostream>
 
 
@@ -18,6 +19,11 @@
 #define LINE_THRESH 3000
 #define LINE_CALIB_SPEED 25
 #define LINE_CALIB_SPEED_RANGE 10
+
+
+#define DIST_TUBE_AALIGN 2919
+#define DIST_TUBE_BALIGN 2800
+#define DIST_TUBE_ALIGN 2500
 
 
 /**
@@ -203,6 +209,38 @@ void align_line()
     go::nav->enablePositionControl();
 }
 
+
+int align_tube()
+{
+        go::nav->disablePositionControl();
+
+        go::nav->driveLeftSpeed(-20);
+        go::nav->driveRightSpeed(20);
+
+        bool is_tube = go::dist->value() > DIST_TUBE_ALIGN;
+        if (!is_tube)
+        {
+            std::cout << CLR_RED << "couldn't find tube!!!" << CLR_RESET << std::endl;
+            return 1;
+        }
+
+        while (go::dist->value() > DIST_TUBE_ALIGN) { msleep(10); }
+
+
+        go::nav->driveLeftSpeed(0);
+        go::nav->driveRightSpeed(0);
+
+        go::nav->resetPositionControllers();
+        go::nav->enablePositionControl();
+
+        // go::nav->rotateBy(-M_PI / 25);
+        // go::nav->startSequence();
+        // go::nav->awaitSequenceComplete();
+
+        return 0;
+}
+
+
 namespace sequences
 {
     void remove_first_pom()
@@ -244,16 +282,48 @@ namespace sequences
         align_line();
 
         go::nav->rotateBy(M_PI / 15);
+        go::nav->startSequence();
+        go::nav->awaitSequenceComplete();
 
-        // drive under the tube
+
+        // align to the tube
+        align_tube();
+        std::cout << "0\n";
+
+        go::nav->disablePositionControl();
+
+        go::nav->driveLeftSpeed(30);
+        go::nav->driveRightSpeed(30);
+
+        while (go::dist->value() < DIST_TUBE_BALIGN) { msleep(10); }
+
+        go::nav->driveLeftSpeed(0);
+        go::nav->driveRightSpeed(0);
+
+        std::cout << "1\n";
+        align_tube();
+        std::cout << "2\n";
+
+        msleep(2000);
+        go::nav->disablePositionControl();
+
+        go::nav->driveLeftSpeed(30);
+        go::nav->driveRightSpeed(30);
+
+        while (go::dist->value() < DIST_TUBE_AALIGN) { msleep(10); }
+
+        go::nav->driveLeftSpeed(0);
+        go::nav->driveRightSpeed(0);
+        std::cout << "3\n";
+
         go::nav->driveDistance(13);
         go::nav->startSequence();
         go::nav->awaitSequenceComplete();
 
-        // // rotate to fit under the tube
-        // go::nav->rotateBy(-M_PI / 11);
-        // go::nav->startSequence();
-        // go::nav->awaitSequenceComplete();
+        // rotate to fit under the tube
+        go::nav->rotateBy(-M_PI / 11);
+        go::nav->startSequence();
+        go::nav->awaitSequenceComplete();
     }
 
     /**

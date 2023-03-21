@@ -9,6 +9,7 @@
 namespace go
 {
     extern kipr::analog::Analog *line;
+    extern kipr::analog::Analog *dist;
     extern BallSorter *balls;
     extern TINav *nav;
     extern Arm *arm;
