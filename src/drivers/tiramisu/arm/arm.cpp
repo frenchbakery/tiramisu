@@ -41,12 +41,11 @@ Arm::Arm(
 
 void Arm::calibrate()
 {
-    grab_servo.setPosition(1024);
     int wrist_speed = wrist_servo.getSpeed();
     wrist_servo.setSpeed(300);
     // - is up
     wrist_servo.setPosition(300);
-    shoulder_servo.setPosition(shoulder_90);
+    shoulder_servo.setPosition(1000);
     ellbow_motor.moveAtVelocity(-calibrate_speed);
 
     // wait for motor to hit end switch

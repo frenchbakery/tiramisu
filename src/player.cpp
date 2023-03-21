@@ -4,11 +4,10 @@
  * @brief music player for the create
  * @version 0.1
  * @date 2023-03-10
- * 
+ *
  * @copyright Copyright FrenchBakery (c) 2023
- * 
+ *
  */
-
 
 #include <vector>
 #include <cstdint>
@@ -16,12 +15,11 @@
 #include <cmath>
 #include <kipr/time/time.h>
 #include <kipr/create/create.h>
+#include <kiprplus/create_motor.hpp>
 #include "player.hpp"
 #include "pitches.h"
 
-
-static const std::vector<uint8_t> treble_melody 
-{
+static const std::vector<uint8_t> treble_melody{
     NR_NOTE_E5,
     NR_NOTE_E3,
     NR_NOTE_B4,
@@ -290,17 +288,28 @@ static const std::vector<uint8_t> bass_durations{
     8,
 };
 
+void awaitSongDone()
+{
+    for (;;)
+    {
+        std::lock_guard lock(kp::CreateMotor::create_access_mutex);
+        if (!get_create_song_playing())
+            break;
+        msleep(10);
+    }
+}
 
 static void playLongSong(const std::vector<uint8_t> &notes, const std::vector<uint8_t> &durations)
 {
     float speed = 1.5;
 
-    if (notes.size() != durations.size()) return;
-    if (notes.size() == 0) return;
+    if (notes.size() != durations.size())
+        return;
+    if (notes.size() == 0)
+        return;
     int sections = std::ceil((float)(notes.size()) / 16.0f);
 
-    while (get_create_song_playing())
-                msleep(1);
+    awaitSongDone();
 
     uint8_t scsong[32];
     int scnotes;
@@ -317,32 +326,38 @@ static void playLongSong(const std::vector<uint8_t> &notes, const std::vector<ui
             int t = (64 * speed) / durations[i + section * 16];
             scsong[(i * 2) + 1] = t;
         }
-        create_load_song(scsong, scnotes, scnumber);
-        while (get_create_song_playing())
-            msleep(1);
-        create_play_song(scnumber);
+        {
+            std::lock_guard lock(kp::CreateMotor::create_access_mutex);
+            create_load_song(scsong, scnotes, scnumber);
+        }
+        awaitSongDone();
+        {
+            std::lock_guard lock(kp::CreateMotor::create_access_mutex);
+            create_play_song(scnumber);
+        }
         msleep(500);
     }
 }
 
 std::thread player;
 bool player_exit;
-void startPlayer()
+void Player::start()
 {
     player_exit = false;
-    player = std::thread([](){
+    player = std::thread([]()
+                         {
         for (;;)
         {
             playLongSong(treble_melody, treble_durations);
             if (player_exit) break;
             playLongSong(bass_melody, bass_durations);
             if (player_exit) break;
-        }
-    });
+        } });
 }
-void stopPlayer()
+void Player::stop()
 {
     player_exit = true;
-    while (!player.joinable()) msleep(10);
+    while (!player.joinable())
+        msleep(10);
     player.join();
 }

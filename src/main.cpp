@@ -1,3 +1,4 @@
+#include <kipr/botball/botball.h>
 #include <kipr/wait_for/wait_for.h>
 #include <kipr/analog/analog.hpp>
 #include <kipr/create/create.h>
@@ -11,7 +12,7 @@
 #include "routines/create.hpp"
 #include "global_objects.hpp"
 #include "term_colors.h"
-#include <iostream>
+#include "player.hpp"
 
 #define BALL_MOTOR_PORT 1
 #define BALL_SERVO_PIN 0
@@ -25,7 +26,9 @@
 #define ARM_MIN_PIN 7
 #define LIGHT_PIN 5
 #define DIST_PIN 0
+#define LINE_PIN 0
 
+#define CAM_LOOP_N 20
 
 #define LIGHT_CALIB_ACCURACY 100
 int ambient_light = -1;
@@ -34,34 +37,12 @@ int light_range = -1;
 
 namespace go
 {
+    kipr::analog::Analog *line;
+    BallSorter *balls;
     TINav *nav;
     Arm *arm;
 }
 
-
-// void grab_cube(Analog &dist_sens, Servo &grab_serv, Arm &my_arm)
-// {
-//     grab_serv.setPosition(1630);
-
-//     my_go::arm->moveEllbowTo(70);
-//     my_go::arm->moveShoulderToAngle(120);
-
-//     std::cout << "set stuff\n";
-
-//     Cam::look_at(YELLOW_CHANNEL);
-
-//     std::cout << "centered\n";
-
-//     // program
-//     // get closer
-
-//     grab_serv.setPosition(1000);
-//     msleep(500);
-//     my_go::arm->moveEllbowTo(90);
-//     create_drive_straight(-100);
-//     msleep(1500);
-//     create_stop();
-// }
 
 
 int main()
@@ -70,16 +51,19 @@ int main()
     go::nav = new TINav;
     go::nav->initialize();
 
-    align_wall();
-    go::nav->driveDistance(-10);
-    go::nav->startSequence();
-    go::nav->awaitSequenceComplete();
+    go::line = new kipr::analog::Analog(LINE_PIN);
 
     camera_open_device_model_at_res(0, BLACK_2017, Resolution::MED_RES);
     camera_load_config("cubes.conf");
 
-    BallSorter balls(BALL_MOTOR_PORT, BALL_SERVO_PIN, BALL_END_PIN);
+    double bat_perc;
+    {
+        std::lock_guard lock(kp::CreateMotor::create_access_mutex);
+        bat_perc = 100 * ((float)get_create_battery_charge() / get_create_battery_capacity());
+    }
+    printf("create battery: %s%.1lf%%%s\n", (bat_perc > 30 ? CLR_GREEN : CLR_RED), bat_perc, CLR_RESET);
 
+    go::balls = new BallSorter(BALL_MOTOR_PORT, BALL_SERVO_PIN, BALL_END_PIN);
 
     kipr::digital::Digital dist(DIST_PIN);
     kipr::analog::Analog light(LIGHT_PIN);
@@ -95,11 +79,19 @@ int main()
 
     std::cout << "initialized\n";
 
-    std::thread bal_cal_thread(&BallSorter::calibrate, &balls);
+
+    std::thread bal_cal_thread(&BallSorter::calibrate, go::balls);
     std::cout << "thread on\n";
+    go::arm->moveGripperTo(40);
     go::arm->calibrate();
 
+    
     // home create
+    align_wall();
+    go::nav->driveDistance(-5);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+
     reset_position();
 
     go::arm->moveGripperTo(50);
@@ -133,34 +125,41 @@ int main()
     // while (light.value() > ambient_light - (light_range * .7)) msleep(10);
     int trash;
     std::cout << CLR_GREEN << "start? " << CLR_RESET;
-    std::cin >> trash;
+    std::cin.get();
     std::cout << std::endl;
 
-    go::arm->moveGripperTo(100);
-    go::arm->moveWristToRelativeAngle(90);
-    go::arm->awaitWristDone();
+    // prepare to shutdown
+    int start_time = seconds();
+    shut_down_in(115);
 
-    navigation_sequences::remove_first_pom();
+    go::arm->moveWristToRelativeAngle(90);
+    msleep(2000);
+    go::arm->moveGripperTo(95);
+    msleep(2000);
+
+    sequences::remove_first_pom();
     go::nav->startSequence();
 
     std::cout << CLR_BLUE << "waiting for pom sequence" << CLR_RESET << std::endl;
-    msleep(6000);
+    msleep(5500);
 
     go::arm->moveShoulderToAngle(go::arm->shoulder_90);
     go::arm->moveEllbowTo(70);
     go::arm->moveGripperTo(90);
     go::arm->moveWristToRelativeAngle(90);
 
-    go::nav->awaitSequenceComplete();
+    msleep(7000);
+    go::arm->moveEllbowTo(97);
+    go::arm->moveGripperTo(0);
+    go::arm->moveWristToRelativeAngle(-57);
     go::arm->awaitAllDone();
 
-    go::arm->moveEllbowTo(95);
-    go::arm->moveWristToRelativeAngle(-56);
+    go::nav->awaitSequenceComplete();
     go::arm->awaitAllDone();
 
     // rotate to cube
     double off_a;
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < CAM_LOOP_N; i++)
     {
         off_a = Cam::look_at(0);
         if (off_a != 69420.f)
@@ -172,11 +171,11 @@ int main()
         go::arm->moveGripperTo(100);
         std::cout << CLR_RED << "Cube 1 not found!" << CLR_RESET << std::endl;
 
-        std::cout << CLR_GREEN << "MATSE: " << CLR_RESET;
-        std::cin >> trash;
-        std::cout << std::endl;
+        // std::cout << CLR_GREEN << "MATSE: " << CLR_RESET;
+        // std::cin >> trash;
+        // std::cout << std::endl;
 
-        navigation_sequences::yellow_cubes::alternate_drop_first_cube();
+        sequences::yellow_cubes::alternate_drop_first_cube();
         go::nav->startSequence();
         go::nav->awaitSequenceComplete();
     }
@@ -208,27 +207,92 @@ int main()
         go::nav->startSequence();
         go::nav->awaitSequenceComplete();
 
-        std::cout << CLR_GREEN << "MATSE: " << CLR_RESET;
-        std::cin >> trash;
-        std::cout << std::endl;
+        // std::cout << CLR_GREEN << "MATSE: " << CLR_RESET;
+        // std::cin >> trash;
+        // std::cout << std::endl;
 
-        navigation_sequences::yellow_cubes::drop_first_cube();
-        std::cout << CLR_BLUE << "waiting for cube drop 1 sequence" << CLR_RESET << std::endl;
+        sequences::yellow_cubes::alternate_drop_first_cube();
         go::nav->startSequence();
         go::nav->awaitSequenceComplete();
 
-        navigation_sequences::yellow_cubes::stack_cube(current_stack);
-        current_stack++;
+        // sequences::yellow_cubes::drop_first_cube();
+        // std::cout << CLR_BLUE << "waiting for cube drop 1 sequence" << CLR_RESET << std::endl;
+        // go::nav->startSequence();
+        // go::nav->awaitSequenceComplete();
+
+        // sequences::yellow_cubes::stack_cube(current_stack);
+        // current_stack++;
    }
 
-    // go::arm->unpark();
+
+    sequences::balls_pickup_position();
+
+    // wait for 60 seconds
+    std::cout << "\e[?25l";
+    int delta;
+    for (;;)
+    {
+        delta = seconds() - start_time;
+        if (delta >= 60)
+            break;
+        
+        std::cout << "naggl in: " << 60 - delta << "          \r";
+        msleep(20);
+
+    }
+    std::cout << "\e[?25h";
+
+    sequences::funktion_punkt_naggl();
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+
+    std::cout << CLR_GREEN << "continue? " << CLR_RESET;
+    std::cin.get();
+    std::cout << std::endl;
+
+    sequences::balls_drop_position();
+
+    // prepare ball sorter
+    go::balls->toDropPosition();
+    go::balls->waitForMotor();
+
+    // rotate over the tube
+    go::nav->rotateBy(M_PI_4);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+
+    // drop ball
+    go::balls->pushBall(false);
+    go::balls->waitForServo();
+
+    // move back a bit
+    go::nav->driveDistance(-10);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+
+    // put pusher down and push tube into area
+    go::balls->toDeck();
+    go::balls->waitForMotor();
+    go::nav->driveDistance(40);
+    go::nav->driveDistance(-20);
+
+    // drop other balls in area
+    go::nav->rotateBy(-M_PI_4);
+    go::nav->driveDistance(20);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+    go::balls->resetPusher();
+    go::balls->waitForMotor();
+
+    return 0;
+
     go::arm->moveShoulderTo(5);
     go::arm->moveEllbowTo(50);
     go::arm->moveWristToRelativeAngle(90);
     go::arm->awaitAllDone();
     go::arm->moveGripperTo(100);
 
-    navigation_sequences::yellow_cubes::goto_second_cube();
+    sequences::yellow_cubes::goto_second_cube();
     std::cout << CLR_BLUE << "waiting for cube 2 sequence" << CLR_RESET << std::endl;
     go::nav->startSequence();
     go::nav->awaitSequenceComplete();
@@ -238,7 +302,7 @@ int main()
     go::arm->awaitAllDone();
 
     // rotate to cube
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < CAM_LOOP_N; i++)
     {
         off_a = Cam::look_at(0);
         if (off_a != 69420.f)
@@ -279,12 +343,12 @@ int main()
         go::nav->startSequence();
         go::nav->awaitSequenceComplete();
 
-        navigation_sequences::yellow_cubes::drop_second_cube();
+        sequences::yellow_cubes::drop_second_cube();
         std::cout << CLR_BLUE << "waiting for cube drop 2 sequence" << CLR_RESET << std::endl;
         go::nav->startSequence();
         go::nav->awaitSequenceComplete();
 
-        navigation_sequences::yellow_cubes::stack_cube(current_stack);
+        sequences::yellow_cubes::stack_cube(current_stack);
         current_stack++;
     }
 

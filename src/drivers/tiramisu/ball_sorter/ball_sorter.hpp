@@ -8,6 +8,7 @@
  * @copyright Copyright frenchbakery (c) 2023
  * 
  */
+#pragma once
 #include <kipr/digital/digital.hpp>
 #include <kiprplus/smooth_servo.hpp>
 #include <kiprplus/pid_motor.hpp>
@@ -32,8 +33,8 @@ class BallSorter
         const int initial_servo_pos = 2074;
         const int servo_up = 500;
 
-        const int motor_down = 760;
-        const int motor_drop = 660;
+        const int motor_down = 800;
+        const int motor_drop = 640;
 
     public:
         BallSorter(int motor_pin, int servo_pin, int switch_pin);
