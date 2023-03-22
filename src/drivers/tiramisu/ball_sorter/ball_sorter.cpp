@@ -12,7 +12,7 @@
 
 
 BallSorter::BallSorter(int motor_pin, int servo_pin, int switch_pin)
-    : turn_motor(motor_pin, 768), push_servo(servo_pin, initial_servo_pos), end_switch(switch_pin)
+    : turn_motor(motor_pin, 768, 20), push_servo(servo_pin, initial_servo_pos), end_switch(switch_pin)
 {
     push_servo.enable();
     push_servo.setSpeed(65553);

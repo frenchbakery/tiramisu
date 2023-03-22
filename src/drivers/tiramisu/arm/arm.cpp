@@ -20,7 +20,7 @@ Arm::Arm(
             int end_switch_pin,
             int start_switch_pin
 )
-    :   ellbow_motor(motor_pin, 512),
+    :   ellbow_motor(motor_pin, 512, 20),
         shoulder_servo(shoulder_servo_pin),
         wrist_servo(wrist_servo_pin),
         grab_servo(grab_servo_pin),
