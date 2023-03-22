@@ -212,32 +212,34 @@ void align_line()
 
 int align_tube()
 {
-        go::nav->disablePositionControl();
+    std::cout << "aligning tube\n";
 
-        go::nav->driveLeftSpeed(-20);
-        go::nav->driveRightSpeed(20);
+    go::nav->disablePositionControl();
 
-        bool is_tube = go::dist->value() > DIST_TUBE_ALIGN;
-        if (!is_tube)
-        {
-            std::cout << CLR_RED << "couldn't find tube!!!" << CLR_RESET << std::endl;
-            return 1;
-        }
+    go::nav->driveLeftSpeed(-20);
+    go::nav->driveRightSpeed(20);
 
-        while (go::dist->value() > DIST_TUBE_ALIGN) { msleep(10); }
+    bool is_tube = go::dist->value() > DIST_TUBE_ALIGN;
+    if (!is_tube)
+    {
+        std::cout << CLR_RED << "couldn't find tube!!!" << CLR_RESET << std::endl;
+        return 1;
+    }
+
+    while (go::dist->value() > DIST_TUBE_ALIGN) { msleep(10); }
 
 
-        go::nav->driveLeftSpeed(0);
-        go::nav->driveRightSpeed(0);
+    go::nav->driveLeftSpeed(0);
+    go::nav->driveRightSpeed(0);
 
-        go::nav->resetPositionControllers();
-        go::nav->enablePositionControl();
+    go::nav->resetPositionControllers();
+    go::nav->enablePositionControl();
 
-        // go::nav->rotateBy(-M_PI / 25);
-        // go::nav->startSequence();
-        // go::nav->awaitSequenceComplete();
+    // go::nav->rotateBy(-M_PI / 25);
+    // go::nav->startSequence();
+    // go::nav->awaitSequenceComplete();
 
-        return 0;
+    return 0;
 }
 
 
@@ -292,8 +294,8 @@ namespace sequences
 
         go::nav->disablePositionControl();
 
-        go::nav->driveLeftSpeed(30);
-        go::nav->driveRightSpeed(30);
+        go::nav->driveLeftSpeed(40);
+        go::nav->driveRightSpeed(40);
 
         while (go::dist->value() < DIST_TUBE_BALIGN) { msleep(10); }
 
@@ -307,11 +309,31 @@ namespace sequences
         msleep(2000);
         go::nav->disablePositionControl();
 
-        go::nav->driveLeftSpeed(30);
-        go::nav->driveRightSpeed(30);
+        go::nav->driveLeftSpeed(40);
+        go::nav->driveRightSpeed(40);
 
-        while (go::dist->value() < DIST_TUBE_AALIGN) { msleep(10); }
+        bool is_wall;
+        for (;;)
+        {
+            if (go::dist->value() < DIST_TUBE_AALIGN)  // target reached
+            {
+                std::cout << "target\n";
+                break;
+            }
+            
+            {
+                std::lock_guard lock(kp::CreateMotor::create_access_mutex);
+                is_wall = get_create_lbump() || get_create_rbump();
+            }
 
+            if (is_wall)
+            {
+                std::cout << "wall\n";
+                break;
+            }
+            msleep(20);
+        }
+ 
         go::nav->driveLeftSpeed(0);
         go::nav->driveRightSpeed(0);
         std::cout << "3\n";

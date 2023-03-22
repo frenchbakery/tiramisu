@@ -125,10 +125,14 @@ int main()
         bal_cal_thread.join();
 
     // while (light.value() > ambient_light - (light_range * .7)) msleep(10);
+    // Player::start();
+
     int trash;
     std::cout << CLR_GREEN << "start? " << CLR_RESET;
     std::cin.get();
     std::cout << std::endl;
+
+    // Player::stop();
 
     // prepare to shutdown
     int start_time = seconds();
