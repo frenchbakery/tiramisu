@@ -1,6 +1,7 @@
 #include <kipr/time/time.h>
 #include "term_colors.h"
 #include "utils.hpp"
+#include <fstream>
 #include <iostream>
 #include "arm.hpp"
 
@@ -27,6 +28,19 @@ Arm::Arm(
         max_switch(end_switch_pin),
         min_switch(start_switch_pin)
 {
+    // reate arm range from previousely run calibration
+    try
+    {
+        std::ifstream my_stream("/home/access/config/motor_range.tiramisu");
+        my_stream >> motor_range;
+        my_stream.close();
+    }
+    catch (const std::exception &e)
+    {
+        std::cout << CLR_RED << "configuration read error: " << e.what() << CLR_RESET << std::endl;
+    }
+
+
     // enable servos
     shoulder_servo.enable();
     wrist_servo.enable();
@@ -45,7 +59,7 @@ void Arm::calibrate()
     wrist_servo.setSpeed(300);
     // - is up
     wrist_servo.setPosition(300);
-    shoulder_servo.setPosition(1000);
+    shoulder_servo.setPosition(900);
     ellbow_motor.moveAtVelocity(-calibrate_speed);
 
     // wait for motor to hit end switch
@@ -77,6 +91,17 @@ void Arm::calibrate()
     ellbow_motor.clearPositionCounter();
     ellbow_motor.enablePositionControl();
     ellbow_motor.setAbsoluteTarget(-100);
+
+    try
+    {
+        std::ofstream my_stream("/home/access/config/motor_range.tiramisu");
+        my_stream << motor_range;
+        my_stream.close();
+    }
+    catch (const std::exception &e)
+    {
+        std::cout << CLR_RED << "configuration write error: " << e.what() << CLR_RESET << std::endl;
+    }
 
     // reset wrist servo speed
     awaitWristDone();

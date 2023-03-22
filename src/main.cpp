@@ -45,94 +45,8 @@ namespace go
 }
 
 
-
-int main()
+void cubes_go()
 {
-    int current_stack = 0;
-    go::nav = new TINav;
-    go::nav->initialize();
-
-    go::line = new kipr::analog::Analog(LINE_PIN);
-    go::dist = new kipr::analog::Analog(DIST_PIN);
-
-    camera_open_device_model_at_res(0, BLACK_2017, Resolution::MED_RES);
-    camera_load_config("cubes.conf");
-
-    double bat_perc;
-    {
-        std::lock_guard lock(kp::CreateMotor::create_access_mutex);
-        bat_perc = 100 * ((float)get_create_battery_charge() / get_create_battery_capacity());
-    }
-    printf("create battery: %s%.1lf%%%s\n", (bat_perc > 30 ? CLR_GREEN : CLR_RED), bat_perc, CLR_RESET);
-
-    go::balls = new BallSorter(BALL_MOTOR_PORT, BALL_SERVO_PIN, BALL_END_PIN);
-
-    kipr::digital::Digital dist(DIST_PIN);
-    kipr::analog::Analog light(LIGHT_PIN);
-
-    go::arm = new Arm(
-        ARM_ELLBOW_PIN,
-        ARM_SHOULDER_PIN,
-        ARM_WRIST_PIN,
-        ARM_GRAB_PIN,
-        ARM_MAX_PIN,
-        ARM_MIN_PIN
-    );
-
-    std::cout << "initialized\n";
-
-
-    std::thread bal_cal_thread(&BallSorter::calibrate, go::balls);
-    std::cout << "thread on\n";
-    go::arm->moveGripperTo(40);
-    go::arm->calibrate();
-
-    
-    // home create
-    align_wall();
-    go::nav->driveDistance(-5);
-    go::nav->startSequence();
-    go::nav->awaitSequenceComplete();
-
-    reset_position();
-
-    go::arm->moveGripperTo(50);
-
-    std::cout << CLR_BLUE << "calibrated" << CLR_RESET << std::endl;
-    go::arm->park();
-
-    std::cout << CLR_BLUE << "parked" << CLR_RESET << std::endl;
-
-    // calibrate ligtht sensor
-    int sum = 0;
-    int now_val;
-    int max_value = 1;
-    int min_value = 4086;
-    for (int sensor_value_index = 0; sensor_value_index < LIGHT_CALIB_ACCURACY; sensor_value_index++)
-    {
-        now_val = light.value();
-        sum += now_val;
-        max_value = std::max(now_val, max_value);
-        min_value = std::min(now_val, min_value);
-
-        msleep(20);
-    }
-    ambient_light = sum / LIGHT_CALIB_ACCURACY;  // average light value
-    light_range = max_value - min_value;
-
-    // wait for threads
-    if (bal_cal_thread.joinable())
-        bal_cal_thread.join();
-
-    // while (light.value() > ambient_light - (light_range * .7)) msleep(10);
-    // Player::start();
-
-    int trash;
-    std::cout << CLR_GREEN << "start? " << CLR_RESET;
-    std::cin.get();
-    std::cout << std::endl;
-
-    // Player::stop();
 
     // prepare to shutdown
     int start_time = seconds();
@@ -290,77 +204,77 @@ int main()
     go::balls->resetPusher();
     go::balls->waitForMotor();
 
-    return 0;
+    return;
 
-    go::arm->moveShoulderTo(5);
-    go::arm->moveEllbowTo(50);
-    go::arm->moveWristToRelativeAngle(90);
-    go::arm->awaitAllDone();
-    go::arm->moveGripperTo(100);
+    // go::arm->moveShoulderTo(5);
+    // go::arm->moveEllbowTo(50);
+    // go::arm->moveWristToRelativeAngle(90);
+    // go::arm->awaitAllDone();
+    // go::arm->moveGripperTo(100);
 
-    sequences::yellow_cubes::goto_second_cube();
-    std::cout << CLR_BLUE << "waiting for cube 2 sequence" << CLR_RESET << std::endl;
-    go::nav->startSequence();
-    go::nav->awaitSequenceComplete();
+    // sequences::yellow_cubes::goto_second_cube();
+    // std::cout << CLR_BLUE << "waiting for cube 2 sequence" << CLR_RESET << std::endl;
+    // go::nav->startSequence();
+    // go::nav->awaitSequenceComplete();
 
-    go::arm->unpark();
-    go::arm->moveGripperTo(0);
-    go::arm->awaitAllDone();
+    // go::arm->unpark();
+    // go::arm->moveGripperTo(0);
+    // go::arm->awaitAllDone();
 
-    // rotate to cube
-    for (int i = 0; i < CAM_LOOP_N; i++)
-    {
-        off_a = Cam::look_at(0);
-        if (off_a != 69420.f)
-            break;
-    }
+    // // rotate to cube
+    // for (int i = 0; i < CAM_LOOP_N; i++)
+    // {
+    //     off_a = Cam::look_at(0);
+    //     if (off_a != 69420.f)
+    //         break;
+    // }
 
-    if (off_a == 69420.f)
-    {   // cube not found
-        std::cout << CLR_RED << "Cube 2 not found!" << CLR_RESET << std::endl;
-        go::nav->startSequence();
-        go::nav->awaitSequenceComplete();
-    }
-    else
-    {   // cube found
-        std::cout << "moving by " << off_a * (180 / M_PI) << "°\n";
+    // if (off_a == 69420.f)
+    // {   // cube not found
+    //     std::cout << CLR_RED << "Cube 2 not found!" << CLR_RESET << std::endl;
+    //     go::nav->startSequence();
+    //     go::nav->awaitSequenceComplete();
+    // }
+    // else
+    // {   // cube found
+    //     std::cout << "moving by " << off_a * (180 / M_PI) << "°\n";
 
-        go::nav->rotateBy(off_a);
-        go::nav->startSequence();
-        go::nav->awaitSequenceComplete();
-        std::cout << "moved by " << off_a * (180 / M_PI) << "°\n";
+    //     go::nav->rotateBy(off_a);
+    //     go::nav->startSequence();
+    //     go::nav->awaitSequenceComplete();
+    //     std::cout << "moved by " << off_a * (180 / M_PI) << "°\n";
 
-        go::nav->driveDistance(18);
-        go::nav->startSequence();
-        go::nav->awaitSequenceComplete();
+    //     go::nav->driveDistance(18);
+    //     go::nav->startSequence();
+    //     go::nav->awaitSequenceComplete();
 
-        std::cout << "gripping\n";
+    //     std::cout << "gripping\n";
 
-        go::arm->moveGripperTo(95);;
-        go::arm->awaitGripperDone();
+    //     go::arm->moveGripperTo(95);;
+    //     go::arm->awaitGripperDone();
 
-        msleep(200);
+    //     msleep(200);
 
 
-        go::arm->moveWristToRelativeAngle(30);
-        go::arm->awaitWristDone();
+    //     go::arm->moveWristToRelativeAngle(30);
+    //     go::arm->awaitWristDone();
 
-        go::nav->rotateBy(-off_a);
-        go::nav->startSequence();
-        go::nav->awaitSequenceComplete();
+    //     go::nav->rotateBy(-off_a);
+    //     go::nav->startSequence();
+    //     go::nav->awaitSequenceComplete();
 
-        sequences::yellow_cubes::drop_second_cube();
-        std::cout << CLR_BLUE << "waiting for cube drop 2 sequence" << CLR_RESET << std::endl;
-        go::nav->startSequence();
-        go::nav->awaitSequenceComplete();
+    //     sequences::yellow_cubes::drop_second_cube();
+    //     std::cout << CLR_BLUE << "waiting for cube drop 2 sequence" << CLR_RESET << std::endl;
+    //     go::nav->startSequence();
+    //     go::nav->awaitSequenceComplete();
 
-        sequences::yellow_cubes::stack_cube(current_stack);
-        current_stack++;
-    }
+    //     sequences::yellow_cubes::stack_cube(current_stack);
+    //     current_stack++;
+    // }
 
-    go::arm->awaitAllDone();
-    go::nav->startSequence();
-    go::nav->awaitSequenceComplete();
+    // go::arm->awaitAllDone();
+    // go::nav->startSequence();
+    // go::nav->awaitSequenceComplete();
 
     // go::arm->awaitAllDone();
 
@@ -401,7 +315,200 @@ int main()
     // {
     //     std::cout << "couldn't connect to create";
     // }
-    create_disconnect();
+}
 
+
+void poms_only()
+{
+    go::arm->moveWristToRelativeAngle(90);
+    msleep(1000);
+    go::arm->moveGripperTo(90);
+    go::arm->moveEllbowTo(50);
+
+    // avoid colliding with the tube
+    go::nav->rotateBy(-M_PI_2);
+    go::nav->driveDistance(-8);
+    go::nav->rotateBy(M_PI_2);
+
+    // collect first pom
+    go::nav->driveDistance(-40);
+    go::nav->rotateBy(-M_PI_2);
+
+    // drive to second pom
+    go::nav->driveDistance(-12);
+    go::nav->rotateBy(-M_PI_2);
+
+    // go over second pom and rotate to line
+    go::nav->driveDistance(-25);
+    go::nav->rotateBy(M_PI_2);
+
+    // drive to desk end and rotate
+    go::nav->driveDistance(-157);
+    go::nav->rotateBy(-M_PI_2);
+
+    // push poms into area
+    go::nav->driveDistance(-20);
+
+    // push round thingy mc' bob
+    go::nav->driveDistance(40);
+    go::nav->rotateBy(M_PI);
+
+    // start sequence and wait for it to complete
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+    go::arm->awaitAllDone();
+
+    // push thingy
+    go::balls->toDeck();
+    go::balls->waitForMotor();
+    go::nav->driveDistance(30);
+
+    // start sequence and wait for it to complete
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+    go::arm->awaitAllDone();
+}
+
+
+void lower_cube_from_poms()
+{
+    go::balls->raise();
+    go::arm->unpark();
+    go::nav->driveDistance(-20);
+    go::nav->rotateBy(M_PI);
+
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+
+    go::arm->moveGripperTo(0);
+    go::arm->awaitAllDone();
+
+    Cam::look_at(0);
+
+    msleep(2000);
+}
+
+
+void align_create()
+{
+    // home create
+    align_wall();
+
+    go::nav->driveDistance(-5);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+
+    reset_position();
+}
+
+
+std::thread align_arm()
+{
+    // start calibration of ball sorter
+    std::thread bal_cal_thread(&BallSorter::calibrate, go::balls);
+
+    // calibrate main arm
+    go::arm->moveGripperTo(40);
+    go::arm->calibrate();
+    go::arm->moveGripperTo(50);
+
+    go::arm->awaitAllDone();
+
+    return bal_cal_thread;
+}
+
+
+void calibrate_light_sensor(kipr::analog::Analog *light_sensor)
+{
+    int sum = 0;
+    int now_val;
+    int max_value = 1;
+    int min_value = 4086;
+    for (int sensor_value_index = 0; sensor_value_index < LIGHT_CALIB_ACCURACY; sensor_value_index++)
+    {
+        now_val = light_sensor->value();
+        sum += now_val;
+        max_value = std::max(now_val, max_value);
+        min_value = std::min(now_val, min_value);
+
+        msleep(20);
+    }
+    ambient_light = sum / LIGHT_CALIB_ACCURACY;  // average light value
+    light_range = max_value - min_value;
+}
+
+
+void calibrate_all()
+{
+    align_create();
+
+    std::thread arm_thread = align_arm();
+    if (arm_thread.joinable())
+        arm_thread.join();
+
+    std::cout << CLR_BLUE << "calibrated" << CLR_RESET << std::endl;
+    go::arm->park();
+
+    std::cout << CLR_BLUE << "parked" << CLR_RESET << std::endl;
+}
+
+
+void wait_for_light(kipr::analog::Analog *light_sensor)
+{
+    while (light_sensor->value() > ambient_light - (light_range * .7)) msleep(10);
+}
+
+
+int main()
+{
+    // initialization
+    int current_stack = 0;
+    go::nav = new TINav;
+    go::nav->initialize();
+
+    go::line = new kipr::analog::Analog(LINE_PIN);
+    go::dist = new kipr::analog::Analog(DIST_PIN);
+
+    camera_open_device_model_at_res(0, BLACK_2017, Resolution::MED_RES);
+    camera_load_config("cubes.conf");
+
+    double bat_perc;
+    {
+        std::lock_guard lock(kp::CreateMotor::create_access_mutex);
+        bat_perc = 100 * ((float)get_create_battery_charge() / get_create_battery_capacity());
+    }
+    printf("create battery: %s%.1lf%%%s\n", (bat_perc > 30 ? CLR_GREEN : CLR_RED), bat_perc, CLR_RESET);
+
+    go::balls = new BallSorter(BALL_MOTOR_PORT, BALL_SERVO_PIN, BALL_END_PIN);
+
+    kipr::digital::Digital dist(DIST_PIN);
+    kipr::analog::Analog light(LIGHT_PIN);
+
+    go::arm = new Arm(
+        ARM_ELLBOW_PIN,
+        ARM_SHOULDER_PIN,
+        ARM_WRIST_PIN,
+        ARM_GRAB_PIN,
+        ARM_MAX_PIN,
+        ARM_MIN_PIN
+    );
+    std::cout << "initialized\n";
+
+    // calibration
+    // calibrate_all();
+    align_create();
+
+    return 0;
+    // calibrate ligtht sensor
+    calibrate_light_sensor(&light);
+
+    // Player::start();
+    wait_for_light(&light);
+    // Player::stop();
+
+    poms_only();
+    lower_cube_from_poms();
+
+    create_disconnect();
     return 0;
 }

@@ -268,7 +268,7 @@ namespace sequences
     {
         // align y
         go::arm->moveGripperTo(90);
-        go::nav->driveDistance(-18);
+        // go::nav->driveDistance(-18);
         go::nav->rotateBy(-M_PI_2);
         go::nav->startSequence();
         go::nav->awaitSequenceComplete();
@@ -283,7 +283,7 @@ namespace sequences
         go::balls->waitForMotor();
         align_line();
 
-        go::nav->rotateBy(M_PI / 15);
+        go::nav->rotateBy(M_PI / 12);
         go::nav->startSequence();
         go::nav->awaitSequenceComplete();
 
@@ -315,15 +315,15 @@ namespace sequences
         bool is_wall;
         for (;;)
         {
-            if (go::dist->value() < DIST_TUBE_AALIGN)  // target reached
-            {
-                std::cout << "target\n";
-                break;
-            }
+            // if (go::dist->value() < DIST_TUBE_AALIGN)  // target reached
+            // {
+            //     std::cout << "target\n";
+            //     break;
+            // }
             
             {
                 std::lock_guard lock(kp::CreateMotor::create_access_mutex);
-                is_wall = get_create_lbump() || get_create_rbump();
+                is_wall = get_create_rbump();
             }
 
             if (is_wall)
@@ -456,7 +456,7 @@ namespace sequences
         void drop_first_cube()
         {
             go::nav->rotateBy(M_PI - (M_PI / 10));
-            go::nav->driveDistance(20);
+            go::nav->driveDistance(2);
         }
 
         /**
