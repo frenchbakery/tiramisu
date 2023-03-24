@@ -28,8 +28,8 @@
 #define DIST_PIN 4
 #define LINE_PIN 0
 
-#define AIMING_FOR 1040
-#define AIMING_FOR_wall 2300
+#define AIMING_FOR 910
+#define AIMING_FOR_wall 1930
 
 #define CAM_LOOP_N 20
 
@@ -344,11 +344,14 @@ void poms_only()
     go::nav->rotateBy(-M_PI_2);
 
     // go over second pom and rotate to line
-    go::nav->driveDistance(-20);
+    go::nav->driveDistance(-10);
     go::nav->rotateBy(M_PI_2);
 
     // drive to desk end and rotate
-    go::nav->driveDistance(-150);
+    go::nav->driveDistance(-159);
+    go::nav->rotateBy(-M_PI_2);
+    go::nav->driveDistance(-8);
+    go::nav->rotateBy(M_PI_2);
     go::nav->startSequence();
     go::nav->awaitSequenceComplete();
 
@@ -356,6 +359,7 @@ void poms_only()
     go::nav->disablePositionControl();
     go::nav->driveLeftSpeed(-70);
     go::nav->driveRightSpeed(-70);
+    std::cout << "aligning to wall, current: " << go::dist->value() << ", target: " << AIMING_FOR_wall << std::endl;
     while (go::dist->value() < AIMING_FOR_wall) { msleep(20); }
     go::nav->driveLeftSpeed(0);
     go::nav->driveRightSpeed(0);
@@ -365,8 +369,7 @@ void poms_only()
     go::nav->rotateBy(-M_PI_2);
 
     // push poms into area
-    go::nav->driveDistance(-20);
-
+    go::nav->driveDistance(-23);
 
     // start sequence and wait for it to complete
     go::nav->startSequence();
@@ -419,6 +422,11 @@ void lower_cube_from_poms()
 
 void balls_from_poms()
 {
+    go::nav->driveDistance(19);
+
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+
     go::nav->disablePositionControl();
     go::nav->driveLeftSpeed(70);
     go::nav->driveRightSpeed(70);
@@ -442,7 +450,16 @@ void balls_from_poms()
     go::nav->startSequence();
     go::nav->awaitSequenceComplete();
 
+    go::balls->toHold();
+    go::balls->waitForMotor();
+
     align_wall();
+
+    go::balls->toDeck();
+
+    go::nav->rotateBy(M_PI_2);
+    go::nav->driveDistance(-13);
+    go::nav->rotateBy(-M_PI_2);
 
     go::nav->driveDistance(-175);
     go::nav->startSequence();
@@ -482,15 +499,34 @@ void balls_from_poms()
 
     go::nav->driveLeftSpeed(0);
     go::nav->driveRightSpeed(0);
-    std::cout << "motors off";
+    std::cout << "motors off\n";
     go::nav->resetPositionControllers();
     go::nav->enablePositionControl();
 
     // wait for 60 seconds
-    while (seconds() - go::start_time < 63) { msleep(10); }
+    go::arm->moveEllbowTo(60);
+    go::arm->moveWristToRelativeAngle(30);
+    std::cout << "moving arm\n";
 
+    go::arm->awaitAllDone();
+    while (seconds() - go::start_time < 63) { msleep(10); }
+    
     go::nav->rotateBy(M_PI_2);
-    go::nav->driveDistance(-30);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+
+    go::balls->toHold();
+    go::balls->waitForMotor();
+
+    align_wall();
+
+    go::balls->toDeck();
+
+    go::arm->moveWristToRelativeAngle(90);
+    go::arm->moveGripperTo(70);
+    go::arm->moveEllbowTo(40);
+
+    go::nav->driveDistance(-40);
 
     go::nav->startSequence();
     go::nav->awaitSequenceComplete();
@@ -498,11 +534,18 @@ void balls_from_poms()
     go::balls->toDropPosition();
     go::balls->waitForMotor();
 
-    go::nav->rotateBy(M_PI_2 * 2.5);
-    go::nav->driveDistance(30);
+    go::nav->rotateBy(M_PI_2 * 2.3);
+    go::nav->driveDistance(55);
+    go::nav->rotateBy(M_PI_2 * .7);
+    // go::nav->rotateBy(-M_PI_4);
 
     go::nav->startSequence();
     go::nav->awaitSequenceComplete();
+
+    go::arm->moveShoulderToAngle(go::arm->shoulder_90);
+    go::arm->moveEllbowTo(90);
+    go::arm->moveWristToRelativeAngle(-60);
+    go::arm->awaitAllDone();
 }
 
 

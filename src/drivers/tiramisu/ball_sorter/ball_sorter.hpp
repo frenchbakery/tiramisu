@@ -33,7 +33,7 @@ class BallSorter
         const int initial_servo_pos = 2074;
         const int servo_up = 500;
 
-        const int motor_down = 900;
+        const int motor_down = 1000;
         const int motor_drop = 300;
 
     public:
@@ -46,6 +46,8 @@ class BallSorter
          * 
          */
         void toDeck();
+
+        void toHold();
 
         /**
          * @brief set sorter to ball drop position

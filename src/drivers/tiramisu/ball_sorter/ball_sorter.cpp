@@ -42,6 +42,12 @@ void BallSorter::toDeck()
     turn_motor.setAbsoluteTarget(motor_down);
 }
 
+void BallSorter::toHold()
+{
+    turn_motor.enablePositionControl();
+    turn_motor.setAbsoluteTarget(motor_down - 100);
+}
+
 void BallSorter::toDropPosition()
 {
     // adjust motor position

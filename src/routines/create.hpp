@@ -57,7 +57,7 @@ void drive_until_bumper(int speed = 50)
 }
 
 
-void align_wall(int accuracy = 2, int speed = 25)
+void align_wall(int accuracy = 2, int speed = 35)
 {
     for (int j; j < 20; j++)
     {
