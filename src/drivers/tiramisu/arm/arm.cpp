@@ -61,11 +61,10 @@ void Arm::calibrate()
     wrist_servo.setSpeed(300);
     // - is up
     wrist_servo.setPosition(300);
-    shoulder_servo.setPosition(800);
+    shoulder_servo.setPosition(900);
     ellbow_motor.moveAtVelocity(-calibrate_speed);
 
     // wait for motor to hit end switch
-    std::cout << "max\n";
     bool set_wrist_down = false;
     while (!max_switch.value())
     {
@@ -79,15 +78,16 @@ void Arm::calibrate()
 
         msleep(10);
     }
+    std::cout << "max\n";
 
     ellbow_motor.clearPositionCounter();
     ellbow_motor.moveAtVelocity(calibrate_speed);
     moveWristToRelativeAngle(70);
 
     // wait for motor to hit end switch
-    std::cout << "min\n";
     while (!min_switch.value()) { msleep(10); }
     ellbow_motor.off();
+    std::cout << "min\n";
     msleep(500);
 
     motor_range = -ellbow_motor.getPosition();
