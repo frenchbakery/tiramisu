@@ -33,7 +33,7 @@ class BallSorter
         const int initial_servo_pos = 2074;
         const int servo_up = 500;
 
-        const int motor_down = 800;
+        const int motor_down = 900;
         const int motor_drop = 640;
 
     public:

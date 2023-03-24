@@ -34,6 +34,8 @@ Arm::Arm(
         std::ifstream my_stream("/home/access/config/motor_range.tiramisu");
         my_stream >> motor_range;
         my_stream.close();
+
+        std::cout << "read arm clibration\n";
     }
     catch (const std::exception &e)
     {
@@ -59,10 +61,11 @@ void Arm::calibrate()
     wrist_servo.setSpeed(300);
     // - is up
     wrist_servo.setPosition(300);
-    shoulder_servo.setPosition(900);
+    shoulder_servo.setPosition(800);
     ellbow_motor.moveAtVelocity(-calibrate_speed);
 
     // wait for motor to hit end switch
+    std::cout << "max\n";
     bool set_wrist_down = false;
     while (!max_switch.value())
     {
@@ -82,6 +85,7 @@ void Arm::calibrate()
     moveWristToRelativeAngle(70);
 
     // wait for motor to hit end switch
+    std::cout << "min\n";
     while (!min_switch.value()) { msleep(10); }
     ellbow_motor.off();
     msleep(500);
@@ -97,6 +101,8 @@ void Arm::calibrate()
         std::ofstream my_stream("/home/access/config/motor_range.tiramisu");
         my_stream << motor_range;
         my_stream.close();
+
+        std::cout << "wrote arm clibration\n";
     }
     catch (const std::exception &e)
     {

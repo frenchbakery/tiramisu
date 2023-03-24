@@ -322,8 +322,8 @@ void poms_only()
 {
     go::arm->moveWristToRelativeAngle(90);
     msleep(1000);
-    go::arm->moveGripperTo(90);
-    go::arm->moveEllbowTo(50);
+    go::arm->moveGripperTo(70);
+    go::arm->moveEllbowTo(40);
 
     // avoid colliding with the tube
     go::nav->rotateBy(-M_PI_2);
@@ -339,17 +339,27 @@ void poms_only()
     go::nav->rotateBy(-M_PI_2);
 
     // go over second pom and rotate to line
-    go::nav->driveDistance(-25);
+    go::nav->driveDistance(-20);
     go::nav->rotateBy(M_PI_2);
 
     // drive to desk end and rotate
-    go::nav->driveDistance(-157);
+    go::nav->driveDistance(-161);
     go::nav->rotateBy(-M_PI_2);
 
     // push poms into area
     go::nav->driveDistance(-20);
 
-    // push round thingy mc' bob
+
+    // start sequence and wait for it to complete
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+    go::arm->awaitAllDone();
+}
+
+
+void lower_cube_from_poms()
+{
+   // push round thingy mc' bob
     go::nav->driveDistance(40);
     go::nav->rotateBy(M_PI);
 
@@ -361,31 +371,61 @@ void poms_only()
     // push thingy
     go::balls->toDeck();
     go::balls->waitForMotor();
-    go::nav->driveDistance(30);
 
-    // start sequence and wait for it to complete
+    go::nav->driveDistance(30);
     go::nav->startSequence();
     go::nav->awaitSequenceComplete();
+
     go::arm->awaitAllDone();
+
+    go::balls->raise();
+    go::nav->driveDistance(-20);
+    go::nav->rotateBy(-M_PI);
+
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+
+    go::arm->unpark();
+    go::balls->waitForMotor();
+
+    std::cout << "waiting for gripper\n";
+    go::arm->moveGripperTo(0);
+    go::arm->awaitAllDone();
+
+    std::cout << "looking at\n";
+    Cam::look_at(0);
+
+    msleep(2000);
 }
 
 
-void lower_cube_from_poms()
+void balls_from_poms()
 {
-    go::balls->raise();
-    go::arm->unpark();
-    go::nav->driveDistance(-20);
+    go::nav->driveDistance(20);
     go::nav->rotateBy(M_PI);
 
     go::nav->startSequence();
     go::nav->awaitSequenceComplete();
 
-    go::arm->moveGripperTo(0);
-    go::arm->awaitAllDone();
+    go::balls->toDeck();
+    go::balls->waitForMotor();
 
-    Cam::look_at(0);
+    go::nav->rotateBy(M_PI_2);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
 
-    msleep(2000);
+    align_wall();
+
+    go::nav->driveDistance(-184);
+
+    go::nav->rotateBy(M_PI_2);
+
+    go::nav->driveDistance(-3);
+
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+
+    go::balls->raise();
 }
 
 
@@ -438,11 +478,25 @@ void calibrate_light_sensor(kipr::analog::Analog *light_sensor)
 }
 
 
+void calibrate_arm()
+{
+    std::thread arm_thread = align_arm();
+    if (arm_thread.joinable())
+        arm_thread.join();
+
+    std::cout << CLR_BLUE << "calibrated" << CLR_RESET << std::endl;
+    go::arm->park();
+
+    std::cout << CLR_BLUE << "parked" << CLR_RESET << std::endl;
+}
+
+
 void calibrate_all()
 {
+    std::thread arm_thread = align_arm();
+
     align_create();
 
-    std::thread arm_thread = align_arm();
     if (arm_thread.joinable())
         arm_thread.join();
 
@@ -496,18 +550,20 @@ int main()
 
     // calibration
     // calibrate_all();
-    align_create();
-
+    // align_create();
+    calibrate_arm();
     return 0;
-    // calibrate ligtht sensor
-    calibrate_light_sensor(&light);
 
     // Player::start();
-    wait_for_light(&light);
+    std::cout << CLR_BLUE << "waiting for light" << CLR_RESET << std::endl;
+    std::cin.get();
+    // wait_for_light(&light);
     // Player::stop();
 
     poms_only();
-    lower_cube_from_poms();
+    balls_from_poms();
+
+    go::arm->awaitAllDone();
 
     create_disconnect();
     return 0;
