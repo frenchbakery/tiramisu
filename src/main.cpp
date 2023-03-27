@@ -28,13 +28,15 @@
 #define DIST_PIN 4
 #define LINE_PIN 0
 
-#define AIMING_FOR 1320
+#define AIMING_FOR 1350
 #define AIMING_FOR_front_wall 1800
 #define AIMING_FOR_back_wall 1900
 
 #define CAM_LOOP_N 20
 
 #define LIGHT_CALIB_ACCURACY 100
+#define LIGHT_MANUAL_THRESH 1800
+#define LIGHT_MANUAL
 int ambient_light = -1;
 int light_range = -1;
 
@@ -690,7 +692,11 @@ void calibrate_all()
 
 void wait_for_light(kipr::analog::Analog *light_sensor)
 {
+    #ifdef LIGHT_MANUAL
+    while (light_sensor->value() > LIGHT_MANUAL_THRESH) msleep(10);
+    #else
     while (light_sensor->value() > ambient_light - (light_range * 2)) msleep(10);
+    #endif    
 }
 
 
