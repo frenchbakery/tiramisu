@@ -12,7 +12,7 @@
 
 
 BallSorter::BallSorter(int motor_pin, int servo_pin, int switch_pin)
-    : turn_motor(motor_pin), push_servo(servo_pin, initial_servo_pos), end_switch(switch_pin)
+    : turn_motor(motor_pin, 768, 20), push_servo(servo_pin, initial_servo_pos), end_switch(switch_pin)
 {
     push_servo.enable();
     push_servo.setSpeed(65553);
@@ -40,6 +40,12 @@ void BallSorter::toDeck()
     // adjust motor position
     turn_motor.enablePositionControl();
     turn_motor.setAbsoluteTarget(motor_down);
+}
+
+void BallSorter::toHold()
+{
+    turn_motor.enablePositionControl();
+    turn_motor.setAbsoluteTarget(motor_down - 100);
 }
 
 void BallSorter::toDropPosition()
@@ -93,4 +99,14 @@ void BallSorter::waitForMotor()
 void BallSorter::waitForServo()
 {
     push_servo.waitUntilComleted();
+}
+
+
+void BallSorter::terminate()
+{
+    turn_motor.off();
+    push_servo.disable();
+
+    msleep(5);
+    turn_motor.off();
 }

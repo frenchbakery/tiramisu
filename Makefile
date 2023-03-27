@@ -23,7 +23,7 @@ WORKSPACE_NAME = $(shell basename ${PWD})
 
 # C++ configurations
 CC = aarch64-linux-gnu-g++
-CFLAGS = -g -I$(ADDINC) -I$(INCLUDE_DIR) -I$(INCLUDE_DIR)/el-std/include -I$(SRC_DIR) $(CARG) -std=c++17 -D__TIRAMISU
+CFLAGS = -g $(ADDINC) -I$(INCLUDE_DIR) -I$(INCLUDE_DIR)/el-std/include -I$(SRC_DIR) $(CARG) -std=c++17 -D__TIRAMISU
 LIBS = -lpthread -lkipr $(LARG)
 
 # files and compliation results
@@ -116,7 +116,7 @@ start:
 	make remote_start
 
 hstart: 
-	make local_compile $(LCORES) ADDINC=$(DEV_INCLUDE)
+	make local_compile $(LCORES) ADDINC=-I$(DEV_INCLUDE)
 	make copy_objects
 	make remote_hlink
 	make remote_start
@@ -128,7 +128,7 @@ build:
 
 # localy builds objects, then copies them to the target and links them there
 hbuild:
-	make local_compile $(LCORES) ADDINC=$(DEV_INCLUDE)
+	make local_compile $(LCORES) ADDINC=-I$(DEV_INCLUDE)
 	make copy_objects
 	make remote_hlink
 

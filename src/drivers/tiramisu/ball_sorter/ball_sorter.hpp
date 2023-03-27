@@ -8,6 +8,7 @@
  * @copyright Copyright frenchbakery (c) 2023
  * 
  */
+#pragma once
 #include <kipr/digital/digital.hpp>
 #include <kiprplus/smooth_servo.hpp>
 #include <kiprplus/pid_motor.hpp>
@@ -32,8 +33,8 @@ class BallSorter
         const int initial_servo_pos = 2074;
         const int servo_up = 500;
 
-        const int motor_down = 760;
-        const int motor_drop = 660;
+        const int motor_down = 970;
+        const int motor_drop = 300;
 
     public:
         BallSorter(int motor_pin, int servo_pin, int switch_pin);
@@ -45,6 +46,8 @@ class BallSorter
          * 
          */
         void toDeck();
+
+        void toHold();
 
         /**
          * @brief set sorter to ball drop position
@@ -81,5 +84,6 @@ class BallSorter
         void waitForMotor();
         void waitForServo();
 
+        void terminate();
         // void setMotorSpeed(int speed);  // not implemented by melektron yet
 };
