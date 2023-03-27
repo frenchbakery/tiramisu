@@ -100,3 +100,13 @@ void BallSorter::waitForServo()
 {
     push_servo.waitUntilComleted();
 }
+
+
+void BallSorter::terminate()
+{
+    turn_motor.off();
+    push_servo.disable();
+
+    msleep(5);
+    turn_motor.off();
+}

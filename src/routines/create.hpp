@@ -30,12 +30,12 @@
  * @brief drives until the create hits a wall
  * 
  */
-void drive_until_bumper(int speed = 50)
+void drive_until_bumper(int speed = 60)
 {
     // start motors
     go::nav->disablePositionControl();
     go::nav->driveLeftSpeed(speed);
-    go::nav->driveRightSpeed(speed);
+    go::nav->driveRightSpeed(speed * 1.1);
 
     // wait until bumped into wall
     for (;;)
@@ -57,7 +57,7 @@ void drive_until_bumper(int speed = 50)
 }
 
 
-void align_wall(int accuracy = 2, int speed = 35)
+void align_wall(int accuracy = 2, int speed = 50)
 {
     for (int j; j < 20; j++)
     {
@@ -84,7 +84,7 @@ void align_wall(int accuracy = 2, int speed = 35)
         if (l_b && r_b)
         {
             go::nav->driveLeftSpeed(-speed);
-            go::nav->driveRightSpeed(-speed);
+            go::nav->driveRightSpeed(-speed * 1.1);
         }
         else if (!(l_b || r_b))
         {
@@ -93,17 +93,17 @@ void align_wall(int accuracy = 2, int speed = 35)
                 i++;
             }
             go::nav->driveLeftSpeed(speed);
-            go::nav->driveRightSpeed(speed);
+            go::nav->driveRightSpeed(speed * 1.1);
         }
         else if (l_b)
         {
             go::nav->driveLeftSpeed(-speed);
-            go::nav->driveRightSpeed(speed);
+            go::nav->driveRightSpeed(speed * 1.1);
         }
         else if (r_b)
         {
             go::nav->driveLeftSpeed(speed);
-            go::nav->driveRightSpeed(-speed);
+            go::nav->driveRightSpeed(-speed * 1.1);
         }
         else
         {

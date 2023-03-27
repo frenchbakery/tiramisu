@@ -28,8 +28,9 @@
 #define DIST_PIN 4
 #define LINE_PIN 0
 
-#define AIMING_FOR 910
-#define AIMING_FOR_wall 1930
+#define AIMING_FOR 1320
+#define AIMING_FOR_front_wall 1800
+#define AIMING_FOR_back_wall 1900
 
 #define CAM_LOOP_N 20
 
@@ -336,21 +337,21 @@ void poms_only()
     go::nav->rotateBy(M_PI_2);
 
     // collect first pom
-    go::nav->driveDistance(-40);
+    go::nav->driveDistance(-30);
     go::nav->rotateBy(-M_PI_2);
 
     // drive to second pom
     go::nav->driveDistance(-12);
-    go::nav->rotateBy(-M_PI_2);
+    // go::nav->rotateBy(-M_PI_2);
 
-    // go over second pom and rotate to line
-    go::nav->driveDistance(-10);
-    go::nav->rotateBy(M_PI_2);
+    // // go over second pom and rotate to line
+    // go::nav->driveDistance(-10);
+    // go::nav->rotateBy(M_PI_2);
 
     // drive to desk end and rotate
     go::nav->driveDistance(-159);
     go::nav->rotateBy(-M_PI_2);
-    go::nav->driveDistance(-8);
+    go::nav->driveDistance(-15);
     go::nav->rotateBy(M_PI_2);
     go::nav->startSequence();
     go::nav->awaitSequenceComplete();
@@ -359,8 +360,9 @@ void poms_only()
     go::nav->disablePositionControl();
     go::nav->driveLeftSpeed(-70);
     go::nav->driveRightSpeed(-70);
-    std::cout << "aligning to wall, current: " << go::dist->value() << ", target: " << AIMING_FOR_wall << std::endl;
-    while (go::dist->value() < AIMING_FOR_wall) { msleep(20); }
+
+    std::cout << "aligning to wall, current: " << go::dist->value() << ", target: " << AIMING_FOR_back_wall << std::endl;
+    while (go::dist->value() < AIMING_FOR_back_wall) { msleep(20); }
     go::nav->driveLeftSpeed(0);
     go::nav->driveRightSpeed(0);
     go::nav->resetPositionControllers();
@@ -369,7 +371,7 @@ void poms_only()
     go::nav->rotateBy(-M_PI_2);
 
     // push poms into area
-    go::nav->driveDistance(-23);
+    go::nav->driveDistance(-15);
 
     // start sequence and wait for it to complete
     go::nav->startSequence();
@@ -422,7 +424,7 @@ void lower_cube_from_poms()
 
 void balls_from_poms()
 {
-    go::nav->driveDistance(19);
+    go::nav->driveDistance(10);
 
     go::nav->startSequence();
     go::nav->awaitSequenceComplete();
@@ -431,7 +433,15 @@ void balls_from_poms()
     go::nav->driveLeftSpeed(70);
     go::nav->driveRightSpeed(70);
 
-    while (go::dist->value() > AIMING_FOR) { msleep(10); }
+    for (;;)
+    {
+        auto val = go::dist->value();
+        std::cout << "dist_value=" << val << std::endl;
+        if (val < AIMING_FOR)
+            break;
+        msleep(10);
+    }
+    // while (go::dist->value() > AIMING_FOR) { msleep(10); }
 
     go::nav->driveLeftSpeed(0);
     go::nav->driveRightSpeed(0);
@@ -450,12 +460,12 @@ void balls_from_poms()
     go::nav->startSequence();
     go::nav->awaitSequenceComplete();
 
-    go::balls->toHold();
-    go::balls->waitForMotor();
+    // go::balls->toHold();
+    // go::balls->waitForMotor();
 
-    align_wall();
+    // align_wall();
 
-    go::balls->toDeck();
+    // go::balls->toDeck();
 
     go::nav->rotateBy(M_PI_2);
     go::nav->driveDistance(-13);
@@ -469,7 +479,7 @@ void balls_from_poms()
     go::nav->disablePositionControl();
     go::nav->driveLeftSpeed(-70);
     go::nav->driveRightSpeed(-70);
-    while (go::dist->value() < AIMING_FOR_wall) { msleep(20); }
+    while (go::dist->value() < AIMING_FOR_front_wall) { msleep(20); }
     go::nav->driveLeftSpeed(0);
     go::nav->driveRightSpeed(0);
     go::nav->resetPositionControllers();
@@ -511,9 +521,13 @@ void balls_from_poms()
     go::arm->awaitAllDone();
     while (seconds() - go::start_time < 63) { msleep(10); }
     
+    go::nav->setMotorSpeed(200);
+
     go::nav->rotateBy(M_PI_2);
     go::nav->startSequence();
     go::nav->awaitSequenceComplete();
+
+    go::nav->setMotorSpeed(500);
 
     go::balls->toHold();
     go::balls->waitForMotor();
@@ -522,7 +536,7 @@ void balls_from_poms()
 
     go::balls->toDeck();
 
-    go::arm->moveWristToRelativeAngle(90);
+    go::arm->moveWristToRelativeAngle(10);
     go::arm->moveGripperTo(70);
     go::arm->moveEllbowTo(40);
 
@@ -534,18 +548,65 @@ void balls_from_poms()
     go::balls->toDropPosition();
     go::balls->waitForMotor();
 
+    go::arm->moveShoulderToAngle(go::arm->shoulder_90);
+    go::arm->moveEllbowTo(90);
+    go::arm->moveWristToRelativeAngle(-48);
+    go::arm->moveGripperTo(0);
+
     go::nav->rotateBy(M_PI_2 * 2.3);
     go::nav->driveDistance(55);
+    // start the sequence
+    go::nav->startSequence();
+    // wait for the arm to be ready, only then add the rotation to the sequence
+    go::arm->awaitAllDone();
     go::nav->rotateBy(M_PI_2 * .7);
     // go::nav->rotateBy(-M_PI_4);
-
+    // start sequence again in case it is not running anymore
     go::nav->startSequence();
     go::nav->awaitSequenceComplete();
 
-    go::arm->moveShoulderToAngle(go::arm->shoulder_90);
-    go::arm->moveEllbowTo(90);
-    go::arm->moveWristToRelativeAngle(-60);
+    // track to botgal
+    double off_angle;
+    for (int i = 0; i < CAM_LOOP_N; i++)
+    {
+        off_angle = Cam::look_at(3);
+        if (off_angle != 69420.f)
+            break;
+    }
+    if (off_angle == 69420.f)
+    {
+        // if botgal was not found, exit
+        go::nav->awaitSequenceComplete();
+        go::arm->awaitAllDone();
+        return;
+    }
+    go::nav->rotateBy(off_angle);
+    go::nav->driveDistance(15);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+
+    // grab botgal
+    go::arm->moveGripperTo(95);
+    go::arm->awaitGripperDone();
+    go::arm->moveWristToRelativeAngle(0);
+    go::arm->awaitWristDone();
+
+    // navigate to analysis lab
+    go::nav->rotateBy(M_PI * .85);
+    go::nav->driveDistance(20);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+
+    // drop botgal
+    go::arm->moveEllbowTo(60);
+    go::arm->awaitEllbowDone();
+    go::arm->moveGripperTo(0);
+
     go::arm->awaitAllDone();
+
+    go::nav->driveDistance(10);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
 }
 
 
@@ -629,7 +690,7 @@ void calibrate_all()
 
 void wait_for_light(kipr::analog::Analog *light_sensor)
 {
-    while (light_sensor->value() > ambient_light - (light_range * .7)) msleep(10);
+    while (light_sensor->value() > ambient_light - (light_range * 2)) msleep(10);
 }
 
 
@@ -674,8 +735,10 @@ int main()
     // calibrate_arm();
     // return 0;
 
+    calibrate_light_sensor(go::line);
+
     std::cout << CLR_BLUE << "waiting for light" << CLR_RESET << std::endl;
-    std::cin.get();
+    wait_for_light(go::line);
 
     go::start_time = seconds();
 
@@ -683,6 +746,9 @@ int main()
     balls_from_poms();
 
     go::arm->awaitAllDone();
+
+    go::arm->terminate();
+    go::balls->terminate();
 
     create_disconnect();
     return 0;

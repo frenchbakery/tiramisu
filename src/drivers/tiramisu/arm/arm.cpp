@@ -216,3 +216,15 @@ void Arm::unpark()
     shoulder_servo.setPosition(shoulder_90);
     awaitShoulderDone();
 }
+
+
+void Arm::terminate()
+{
+    ellbow_motor.off();
+    shoulder_servo.disable();
+    wrist_servo.disable();
+    grab_servo.disable();
+
+    msleep(5);
+    ellbow_motor.off();
+}

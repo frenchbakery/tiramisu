@@ -33,7 +33,7 @@ class BallSorter
         const int initial_servo_pos = 2074;
         const int servo_up = 500;
 
-        const int motor_down = 1000;
+        const int motor_down = 970;
         const int motor_drop = 300;
 
     public:
@@ -84,5 +84,6 @@ class BallSorter
         void waitForMotor();
         void waitForServo();
 
+        void terminate();
         // void setMotorSpeed(int speed);  // not implemented by melektron yet
 };

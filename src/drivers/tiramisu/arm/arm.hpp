@@ -122,4 +122,6 @@ class Arm
 
         void park();
         void unpark();
+
+        void terminate();
 };
