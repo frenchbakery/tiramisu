@@ -48,7 +48,7 @@ class Arm
 
         const int shoulder_parked = 1700;
         const int ellbow_parked = 20;
-        const int wrist_parked = -70;
+        const int wrist_parked = -75;
         const int grab_parked = 1024;
 
         /**
