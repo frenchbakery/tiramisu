@@ -710,6 +710,7 @@ int main()
 
     go::light = new kipr::analog::Analog(LIGHT_PIN);
     go::line = new kipr::analog::Analog(LINE_PIN);
+    go::line = new kipr::analog::Analog(LIGHT_PIN);
     go::dist = new kipr::analog::Analog(DIST_PIN);
 
     camera_open_device_model_at_res(0, BLACK_2017, Resolution::MED_RES);
@@ -744,6 +745,7 @@ int main()
 
     std::cout << CLR_BLUE << "waiting for light" << CLR_RESET << std::endl;
     wait_for_light(go::light);
+    wait_for_light(go::line);
     std::cout << CLR_GREEN << "starting" << CLR_RESET << std::endl;
 
     system("/home/access/projects/stopper/run/stopper &");
