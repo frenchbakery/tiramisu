@@ -38,15 +38,32 @@ void drive_until_bumper(int speed = 60)
     go::nav->driveRightSpeed(speed * 1.1);
 
     // wait until bumped into wall
+    bool lbump = false;
+    bool rbump = false;
+    bool llbump = false;
+    bool lrbump = false;
+    bool lllbump = false;
+    bool llrbump = false;
     for (;;)
     {
         {
             std::lock_guard lock(kp::CreateMotor::create_access_mutex);
+            lbump = get_create_lbump();
+            rbump = get_create_rbump();
             msleep(5);
-            if (get_create_lbump() || get_create_rbump())
-                break;
         }
+        if (
+            lbump && llbump && lllbump ||
+            rbump && lrbump && llrbump
+        )
+            break;
+
         msleep(10);
+
+        llbump = lbump;
+        lllbump = llbump;
+        lrbump = rbump;
+        llrbump = lrbump;
     }
 
     // stop motors

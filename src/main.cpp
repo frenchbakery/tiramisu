@@ -425,6 +425,81 @@ void lower_cube_from_poms()
 }
 
 
+void grab_botgal()
+{
+    // track botgal, grab and drop
+    // arm up
+    go::arm->moveShoulderTo(38);
+    go::arm->moveEllbowTo(90);
+    go::arm->moveWristToRelativeAngle(-48);
+    go::arm->moveGripperTo(0);
+
+    go::nav->rotateBy(M_PI_2 * 2.3);
+    go::nav->driveDistance(55);
+    // start the sequence
+    go::nav->startSequence();
+    // wait for the arm to be ready, only then add the rotation to the sequence
+    go::arm->awaitAllDone();
+    go::nav->rotateBy(M_PI_2 * .7);
+    // go::nav->rotateBy(-M_PI_4);
+    // start sequence again in case it is not running anymore
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+
+    // track to botgal
+    std::cout << "tracking\n";
+    double off_angle;
+    for (int i = 0; i < CAM_LOOP_N; i++)
+    {
+        off_angle = Cam::look_at(3);
+        if (off_angle != 69420.f)
+            break;
+    }
+    if (off_angle == 69420.f)
+    {
+        std::cout << "nothing found\n";
+        // if botgal was not found, exit
+        go::nav->awaitSequenceComplete();
+        go::arm->awaitAllDone();
+        return;
+    }
+
+    std::cout << "rotating by: " << off_angle * (180 / M_PI) << std::endl;
+    go::nav->rotateBy(off_angle);
+    go::nav->driveDistance(20);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+
+    drive_until_bumper();
+
+    // grab botgal
+    go::arm->moveGripperTo(98);
+    go::arm->awaitGripperDone();
+    go::arm->moveWristToRelativeAngle(0);
+    go::arm->awaitWristDone();
+
+    // drive back
+    go::nav->driveDistance(-30);
+
+    // navigate to analysis lab
+    go::nav->rotateBy(M_PI * .85);
+    go::nav->driveDistance(20);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+
+    // drop botgal
+    go::arm->moveEllbowTo(40);
+    go::arm->awaitEllbowDone();
+    go::arm->moveGripperTo(0);
+
+    go::arm->awaitAllDone();
+
+    go::nav->driveDistance(10);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+}
+
+
 void balls_from_poms()
 {
     go::nav->driveDistance(10);
@@ -551,65 +626,7 @@ void balls_from_poms()
     go::balls->toDropPosition();
     go::balls->waitForMotor();
 
-    go::arm->moveShoulderToAngle(go::arm->shoulder_90);
-    go::arm->moveEllbowTo(90);
-    go::arm->moveWristToRelativeAngle(-48);
-    go::arm->moveGripperTo(0);
-
-    go::nav->rotateBy(M_PI_2 * 2.3);
-    go::nav->driveDistance(55);
-    // start the sequence
-    go::nav->startSequence();
-    // wait for the arm to be ready, only then add the rotation to the sequence
-    go::arm->awaitAllDone();
-    go::nav->rotateBy(M_PI_2 * .7);
-    // go::nav->rotateBy(-M_PI_4);
-    // start sequence again in case it is not running anymore
-    go::nav->startSequence();
-    go::nav->awaitSequenceComplete();
-
-    // track to botgal
-    double off_angle;
-    for (int i = 0; i < CAM_LOOP_N; i++)
-    {
-        off_angle = Cam::look_at(3);
-        if (off_angle != 69420.f)
-            break;
-    }
-    if (off_angle == 69420.f)
-    {
-        // if botgal was not found, exit
-        go::nav->awaitSequenceComplete();
-        go::arm->awaitAllDone();
-        return;
-    }
-    go::nav->rotateBy(off_angle);
-    go::nav->driveDistance(15);
-    go::nav->startSequence();
-    go::nav->awaitSequenceComplete();
-
-    // grab botgal
-    go::arm->moveGripperTo(95);
-    go::arm->awaitGripperDone();
-    go::arm->moveWristToRelativeAngle(0);
-    go::arm->awaitWristDone();
-
-    // navigate to analysis lab
-    go::nav->rotateBy(M_PI * .85);
-    go::nav->driveDistance(20);
-    go::nav->startSequence();
-    go::nav->awaitSequenceComplete();
-
-    // drop botgal
-    go::arm->moveEllbowTo(60);
-    go::arm->awaitEllbowDone();
-    go::arm->moveGripperTo(0);
-
-    go::arm->awaitAllDone();
-
-    go::nav->driveDistance(10);
-    go::nav->startSequence();
-    go::nav->awaitSequenceComplete();
+    grab_botgal();
 }
 
 
@@ -662,16 +679,19 @@ void calibrate_light_sensor(kipr::analog::Analog *light_sensor)
 }
 
 
-void calibrate_arm()
+void calibrate_arm(bool park = true)
 {
     std::thread arm_thread = align_arm();
     if (arm_thread.joinable())
         arm_thread.join();
 
     std::cout << CLR_BLUE << "calibrated" << CLR_RESET << std::endl;
-    go::arm->park();
+    if (park)
+    {
+        go::arm->park();
 
-    std::cout << CLR_BLUE << "parked" << CLR_RESET << std::endl;
+        std::cout << CLR_BLUE << "parked" << CLR_RESET << std::endl;
+    }
 }
 
 
@@ -738,7 +758,7 @@ int main()
     // calibration
     // calibrate_all();
     // align_create();
-    // calibrate_arm();
+    calibrate_arm(false);
     // return 0;
 
     calibrate_light_sensor(go::light);
