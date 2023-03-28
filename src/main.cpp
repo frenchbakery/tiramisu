@@ -35,7 +35,7 @@
 #define CAM_LOOP_N 20
 
 #define LIGHT_CALIB_ACCURACY 100
-#define LIGHT_MANUAL_THRESH 1800
+#define LIGHT_MANUAL_THRESH 800
 #define LIGHT_MANUAL
 int ambient_light = -1;
 int light_range = -1;
@@ -45,6 +45,7 @@ namespace go
 {
     kipr::analog::Analog *line;
     kipr::analog::Analog *dist;
+    kipr::analog::Analog *light;
     BallSorter *balls;
     TINav *nav;
     Arm *arm;
@@ -707,6 +708,7 @@ int main()
     go::nav = new TINav;
     go::nav->initialize();
 
+    go::light = new kipr::analog::Analog(LIGHT_PIN);
     go::line = new kipr::analog::Analog(LINE_PIN);
     go::dist = new kipr::analog::Analog(DIST_PIN);
 
@@ -721,9 +723,6 @@ int main()
     printf("create battery: %s%.1lf%%%s\n", (bat_perc > 30 ? CLR_GREEN : CLR_RED), bat_perc, CLR_RESET);
 
     go::balls = new BallSorter(BALL_MOTOR_PORT, BALL_SERVO_PIN, BALL_END_PIN);
-
-    kipr::digital::Digital dist(DIST_PIN);
-    kipr::analog::Analog light(LIGHT_PIN);
 
     go::arm = new Arm(
         ARM_ELLBOW_PIN,
@@ -741,11 +740,13 @@ int main()
     // calibrate_arm();
     // return 0;
 
-    calibrate_light_sensor(go::line);
+    calibrate_light_sensor(go::light);
 
     std::cout << CLR_BLUE << "waiting for light" << CLR_RESET << std::endl;
-    wait_for_light(go::line);
+    wait_for_light(go::light);
+    std::cout << CLR_GREEN << "starting" << CLR_RESET << std::endl;
 
+    system("/home/access/projects/stopper/run/stopper &");
     go::start_time = seconds();
 
     poms_only();
