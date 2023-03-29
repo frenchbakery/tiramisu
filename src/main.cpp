@@ -29,6 +29,7 @@
 #define LINE_PIN 0
 
 #define AIMING_FOR 1350
+#define AIMING_FOR_BACK 1250
 #define AIMING_FOR_front_wall 1800
 #define AIMING_FOR_back_wall 1900
 
@@ -448,29 +449,29 @@ void grab_botgal()
     go::nav->awaitSequenceComplete();
 
     // track to botgal
-    std::cout << "tracking\n";
-    double off_angle;
-    for (int i = 0; i < CAM_LOOP_N; i++)
-    {
-        off_angle = Cam::look_at(3);
-        if (off_angle != 69420.f)
-            break;
-    }
-    if (off_angle == 69420.f)
-    {   // not found
-        std::cout << "nothing found\n";
-    }
-    else
-    {   // found
-        std::cout << "rotating by: " << off_angle * (180 / M_PI) << std::endl;
-        go::nav->rotateBy(off_angle);
-    }
+    // std::cout << "tracking\n";
+    // double off_angle;
+    // for (int i = 0; i < CAM_LOOP_N; i++)
+    // {
+    //     off_angle = Cam::look_at(3);
+    //     if (off_angle != 69420.f)
+    //         break;
+    // }
+    // if (off_angle == 69420.f)
+    // {   // not found
+    //     std::cout << "nothing found\n";
+    // }
+    // else
+    // {   // found
+    //     std::cout << "rotating by: " << off_angle * (180 / M_PI) << std::endl;
+    //     go::nav->rotateBy(off_angle);
+    // }
 
-    go::nav->driveDistance(20);
+    go::nav->driveDistance(15);
     go::nav->startSequence();
     go::nav->awaitSequenceComplete();
 
-    drive_until_bumper();
+    drive_until_bumper(42);
 
     // grab botgal
     go::arm->moveGripperTo(98);
@@ -483,7 +484,7 @@ void grab_botgal()
 
     // navigate to analysis lab
     go::nav->rotateBy(M_PI * .85);
-    go::nav->driveDistance(20);
+    go::nav->driveDistance(10);
     go::nav->startSequence();
     go::nav->awaitSequenceComplete();
 
@@ -515,7 +516,7 @@ void balls_from_poms()
     {
         auto val = go::dist->value();
         std::cout << "dist_value=" << val << std::endl;
-        if (val < AIMING_FOR)
+        if (val < AIMING_FOR_BACK)
             break;
         msleep(10);
     }
@@ -538,18 +539,13 @@ void balls_from_poms()
     go::nav->startSequence();
     go::nav->awaitSequenceComplete();
 
-    // go::balls->toHold();
-    // go::balls->waitForMotor();
-
-    // align_wall();
-
-    // go::balls->toDeck();
+    go::nav->driveDistance(-20);
 
     go::nav->rotateBy(M_PI_2);
     go::nav->driveDistance(-13);
     go::nav->rotateBy(-M_PI_2);
 
-    go::nav->driveDistance(-172);
+    go::nav->driveDistance(-152);
     go::nav->startSequence();
     go::nav->awaitSequenceComplete();
 
@@ -598,7 +594,11 @@ void balls_from_poms()
 
     go::arm->awaitAllDone();
     while (seconds() - go::start_time < 63) { msleep(10); }
-    
+
+    go::nav->driveDistance(10);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+
     go::nav->setMotorSpeed(200);
 
     go::nav->rotateBy(M_PI_2);
@@ -614,11 +614,15 @@ void balls_from_poms()
 
     go::balls->toDeck();
 
-    go::arm->moveWristToRelativeAngle(10);
+    go::arm->moveWristToRelativeAngle(70);
     go::arm->moveGripperTo(70);
     go::arm->moveEllbowTo(40);
 
-    go::nav->driveDistance(-40);
+    go::nav->driveDistance(-20);
+    go::nav->rotateBy(-M_PI_2);
+    go::nav->driveDistance(-10);
+    go::nav->rotateBy(M_PI_2);
+    go::nav->driveDistance(-20);
 
     go::nav->startSequence();
     go::nav->awaitSequenceComplete();

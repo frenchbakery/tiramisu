@@ -50,7 +50,7 @@ void drive_until_bumper(int speed = 60)
             std::lock_guard lock(kp::CreateMotor::create_access_mutex);
             lbump = get_create_lbump();
             rbump = get_create_rbump();
-            msleep(5);
+            msleep(2);
         }
         if (
             lbump && llbump && lllbump ||
@@ -58,7 +58,7 @@ void drive_until_bumper(int speed = 60)
         )
             break;
 
-        msleep(10);
+        msleep(7);
 
         llbump = lbump;
         lllbump = llbump;
