@@ -36,3 +36,4 @@ env.mk
 mount
 
 logs/
+examples/

@@ -366,6 +366,7 @@ void poms_only()
 
     std::cout << "aligning to wall, current: " << go::dist->value() << ", target: " << AIMING_FOR_back_wall << std::endl;
     while (go::dist->value() < AIMING_FOR_back_wall) { msleep(20); }
+    
     go::nav->driveLeftSpeed(0);
     go::nav->driveRightSpeed(0);
     go::nav->resetPositionControllers();
@@ -429,9 +430,9 @@ void grab_botgal()
 {
     // track botgal, grab and drop
     // arm up
-    go::arm->moveShoulderTo(38);
+    go::arm->moveShoulderTo(41);
     go::arm->moveEllbowTo(90);
-    go::arm->moveWristToRelativeAngle(-48);
+    go::arm->moveWristToRelativeAngle(-49);
     go::arm->moveGripperTo(0);
 
     go::nav->rotateBy(M_PI_2 * 2.3);
@@ -456,16 +457,15 @@ void grab_botgal()
             break;
     }
     if (off_angle == 69420.f)
-    {
+    {   // not found
         std::cout << "nothing found\n";
-        // if botgal was not found, exit
-        go::nav->awaitSequenceComplete();
-        go::arm->awaitAllDone();
-        return;
+    }
+    else
+    {   // found
+        std::cout << "rotating by: " << off_angle * (180 / M_PI) << std::endl;
+        go::nav->rotateBy(off_angle);
     }
 
-    std::cout << "rotating by: " << off_angle * (180 / M_PI) << std::endl;
-    go::nav->rotateBy(off_angle);
     go::nav->driveDistance(20);
     go::nav->startSequence();
     go::nav->awaitSequenceComplete();
@@ -549,7 +549,7 @@ void balls_from_poms()
     go::nav->driveDistance(-13);
     go::nav->rotateBy(-M_PI_2);
 
-    go::nav->driveDistance(-175);
+    go::nav->driveDistance(-172);
     go::nav->startSequence();
     go::nav->awaitSequenceComplete();
 
@@ -661,6 +661,7 @@ std::thread align_arm()
 
 void calibrate_light_sensor(kipr::analog::Analog *light_sensor)
 {
+    #ifndef LIGHT_MANUAL
     int sum = 0;
     int now_val;
     int max_value = 1;
@@ -676,6 +677,7 @@ void calibrate_light_sensor(kipr::analog::Analog *light_sensor)
     }
     ambient_light = sum / LIGHT_CALIB_ACCURACY;  // average light value
     light_range = max_value - min_value;
+    #endif
 }
 
 
@@ -728,6 +730,10 @@ int main()
     go::nav = new TINav;
     go::nav->initialize();
 
+    // Player::start();
+    // for (;;);
+    // Player::stop();
+
     go::light = new kipr::analog::Analog(LIGHT_PIN);
     go::line = new kipr::analog::Analog(LINE_PIN);
     go::line = new kipr::analog::Analog(LIGHT_PIN);
@@ -758,14 +764,21 @@ int main()
     // calibration
     // calibrate_all();
     // align_create();
-    calibrate_arm(false);
+    // calibrate_arm(false);
     // return 0;
+
+    // go::arm->moveShoulderTo(41);
+    // go::arm->moveEllbowTo(90);
+    // go::arm->moveWristToRelativeAngle(-49);
+    // go::arm->moveGripperTo(0);
+    // go::arm->awaitAllDone();
+    // return 0;
+
 
     calibrate_light_sensor(go::light);
 
     std::cout << CLR_BLUE << "waiting for light" << CLR_RESET << std::endl;
     wait_for_light(go::light);
-    wait_for_light(go::line);
     std::cout << CLR_GREEN << "starting" << CLR_RESET << std::endl;
 
     system("/home/access/projects/stopper/run/stopper &");
