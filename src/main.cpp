@@ -493,13 +493,15 @@ void grab_botgal()
 }
 
 
-void balls_from_poms()
+void balls_from_poms(bool from_botgal = false)
 {
-    go::nav->driveDistance(10);
+    if (!from_botgal)
+    {
+        go::nav->driveDistance(10);
 
-    go::nav->startSequence();
-    go::nav->awaitSequenceComplete();
-
+        go::nav->startSequence();
+        go::nav->awaitSequenceComplete();
+    }
     go::nav->disablePositionControl();
     go::nav->driveLeftSpeed(70);
     go::nav->driveRightSpeed(70);
@@ -614,15 +616,13 @@ void balls_from_poms()
     go::nav->rotateBy(-M_PI_2);
     go::nav->driveDistance(-10);
     go::nav->rotateBy(M_PI_2);
-    go::nav->driveDistance(-20);
+    go::nav->driveDistance(-30);
 
     go::nav->startSequence();
     go::nav->awaitSequenceComplete();
 
     go::balls->toDropPosition();
     go::balls->waitForMotor();
-
-    grab_botgal();
 }
 
 
@@ -719,6 +719,99 @@ void wait_for_light(kipr::analog::Analog *light_sensor)
 }
 
 
+// anti-rip
+/**
+ * @brief directly grab the cube, so the enemy team doesn't get it and can't stack
+ * 
+ */
+void direct_lower_cube()
+{
+    go::nav->setMotorSpeed(700);
+
+    go::arm->setWristSpeed(2048);
+    go::arm->setGripperSpeed(2048);
+
+    go::arm->moveEllbowTo(40);
+    go::arm->moveShoulderTo(30);
+    go::arm->moveGripperTo(90);
+
+    // rotate and drive to
+    go::nav->rotateBy(M_PI * .75);
+    go::nav->driveDistance(10);
+    go::nav->rotateBy(M_PI * .25);
+    go::nav->driveDistance(50);
+    go::nav->startSequence();
+    go::arm->moveWristToRelativeAngle(-20);
+    go::arm->moveGripperTo(0);
+
+    go::nav->awaitSequenceComplete();
+
+    std::cout << "grabbing\n";
+    go::arm->moveGripperTo(98);
+    go::arm->awaitGripperDone();
+    go::arm->moveWristToRelativeAngle(70);
+    msleep(1500);
+
+    go::nav->driveDistance(-10);
+    go::nav->rotateBy(M_PI_2);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+
+    // park botgal
+    go::arm->moveShoulderTo(20);
+    go::arm->moveEllbowTo(40);
+    go::arm->moveWristToRelativeAngle(-80);
+
+    go::nav->driveDistance(-160);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+
+    std::cout << "aligning to wall, current: " << go::dist->value() << ", target: " << AIMING_FOR_back_wall << std::endl;
+
+    // align with back wall
+    go::nav->disablePositionControl();
+    go::nav->driveLeftSpeed(-70);
+    go::nav->driveRightSpeed(-70);
+    while (go::dist->value() < AIMING_FOR_back_wall) { msleep(20); }
+    go::nav->driveLeftSpeed(0);
+    go::nav->driveRightSpeed(0);
+    go::nav->resetPositionControllers();
+    go::nav->enablePositionControl();
+
+    // move to position    
+    go::nav->rotateBy(-M_PI_2);
+    go::nav->driveDistance(-40);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+
+    go::nav->setMotorSpeed(500);
+}
+
+void drop_yellow()
+{
+    go::nav->rotateBy(M_PI_2);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+
+    go::arm->moveWristToRelativeAngle(0);
+    go::arm->moveEllbowTo(50);
+
+    go::arm->awaitAllDone();
+    go::arm->moveGripperTo(50);
+    }
+
+
+void red_role()
+{
+    go::arm->unpark();
+
+    go::nav->rotateBy(M_PI);
+    go::nav->driveDistance(20);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+}
+
+
 int main()
 {
     // initialization
@@ -729,6 +822,7 @@ int main()
     // Player::start();
     // for (;;);
     // Player::stop();
+
 
     go::light = new kipr::analog::Analog(LIGHT_PIN);
     go::line = new kipr::analog::Analog(LINE_PIN);
@@ -760,7 +854,13 @@ int main()
     // calibration
     // calibrate_all();
     // align_create();
-    // calibrate_arm(false);
+    // go::nav->rotateBy(M_PI);
+    // go::nav->startSequence();
+    // go::nav->awaitSequenceComplete();
+
+    // calibrate_arm();
+    // go::arm->terminate();
+    // go::balls->terminate();
     // return 0;
 
     // go::arm->moveShoulderTo(41);
@@ -778,11 +878,19 @@ int main()
     std::cout << CLR_GREEN << "starting" << CLR_RESET << std::endl;
 
     system("/home/access/projects/stopper/run/stopper &");
+    shut_down_in(117);
     go::start_time = seconds();
 
-    poms_only();
-    balls_from_poms();
+    // seeding
+    // poms_only();
+    // balls_from_poms();
+    // grab_botgal();
 
+    // anti rip
+    direct_lower_cube();
+    balls_from_poms(true);
+    drop_yellow();
+    
     go::arm->awaitAllDone();
 
     go::arm->terminate();
