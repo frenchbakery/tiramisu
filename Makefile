@@ -19,7 +19,8 @@ DEV_INCLUDE = devinclude
 OBJ_DIR = obj
 RUN_DIR = run
 MOUNT_FOLDER = mount
-WORKSPACE_NAME = $(shell basename ${PWD})
+# WORKSPACE_NAME = $(shell basename ${PWD})
+WORKSPACE_NAME = "anti_rip"
 
 # C++ configurations
 CC = aarch64-linux-gnu-g++

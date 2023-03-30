@@ -28,7 +28,7 @@
 #define DIST_PIN 4
 #define LINE_PIN 0
 
-#define AIMING_FOR 1350
+#define AIMING_FOR 1330
 #define AIMING_FOR_BACK 1250
 #define AIMING_FOR_front_wall 1800
 #define AIMING_FOR_back_wall 1900
@@ -331,7 +331,7 @@ void cubes_go()
 void poms_only()
 {
     go::arm->moveWristToRelativeAngle(90);
-    msleep(1000);
+    msleep(2000);
     go::arm->moveGripperTo(70);
     go::arm->moveEllbowTo(40);
 
@@ -344,16 +344,8 @@ void poms_only()
     go::nav->driveDistance(-30);
     go::nav->rotateBy(-M_PI_2);
 
-    // drive to second pom
-    go::nav->driveDistance(-12);
-    // go::nav->rotateBy(-M_PI_2);
-
-    // // go over second pom and rotate to line
-    // go::nav->driveDistance(-10);
-    // go::nav->rotateBy(M_PI_2);
-
     // drive to desk end and rotate
-    go::nav->driveDistance(-159);
+    go::nav->driveDistance(-171);
     go::nav->rotateBy(-M_PI_2);
     go::nav->driveDistance(-15);
     go::nav->rotateBy(M_PI_2);
@@ -433,7 +425,7 @@ void grab_botgal()
     // arm up
     go::arm->moveShoulderTo(41);
     go::arm->moveEllbowTo(90);
-    go::arm->moveWristToRelativeAngle(-49);
+    go::arm->moveWristToRelativeAngle(-45);
     go::arm->moveGripperTo(0);
 
     go::nav->rotateBy(M_PI_2 * 2.3);

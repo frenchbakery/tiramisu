@@ -174,6 +174,50 @@ void reset_position()
 
 
 /**
+ * @brief another way of initial calibration
+ * 
+ */
+void reset_position_2()
+{
+    // align on back
+    go::nav->disablePositionControl();
+    go::nav->driveLeftSpeed(-60);
+    go::nav->driveRightSpeed(-60);
+
+    msleep(2000);
+
+    go::nav->driveLeftSpeed(0);
+    go::nav->driveRightSpeed(0);
+    go::nav->resetPositionControllers();
+    go::nav->enablePositionControl();
+
+    // drive 10cm to center
+    go::nav->driveDistance(10);
+    go::nav->rotateBy(M_PI_2);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+
+    // align back
+    go::nav->disablePositionControl();
+    go::nav->driveLeftSpeed(-60);
+    go::nav->driveRightSpeed(-60);
+
+    msleep(2000);
+
+    go::nav->driveLeftSpeed(0);
+    go::nav->driveRightSpeed(0);
+    go::nav->resetPositionControllers();
+    go::nav->enablePositionControl();
+
+    go::nav->driveDistance(-5);
+    go::nav->rotateBy(M_PI_2);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+    msleep(800);
+}
+
+
+/**
  * @brief align at the ballsorte position
  * 
  */
