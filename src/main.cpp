@@ -29,9 +29,9 @@
 #define LINE_PIN 0
 
 #define AIMING_FOR 1330
-#define AIMING_FOR_BACK 1250
+#define AIMING_FOR_BACK 1080
 #define AIMING_FOR_front_wall 1800
-#define AIMING_FOR_back_wall 1900
+#define AIMING_FOR_back_wall 1950
 
 #define CAM_LOOP_N 20
 
@@ -495,36 +495,81 @@ void grab_botgal()
 
 void balls_from_poms(bool from_botgal = false)
 {
+    go::nav->setMotorSpeed(600);
+    go::arm->moveWristToRelativeAngle(90);
+    go::arm->setWristSpeed(2048);
     if (!from_botgal)
-    {
-        go::nav->driveDistance(10);
+        go::nav->rotateBy(-M_PI_2);
+    
+    go::nav->driveDistance(20);
 
-        go::nav->startSequence();
-        go::nav->awaitSequenceComplete();
-    }
-    go::nav->disablePositionControl();
-    go::nav->driveLeftSpeed(70);
-    go::nav->driveRightSpeed(70);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
 
-    for (;;)
-    {
-        auto val = go::dist->value();
-        std::cout << "dist_value=" << val << std::endl;
-        if (val < AIMING_FOR_BACK)
-            break;
-        msleep(10);
-    }
+    // second alignment (like startbox alignment)
+    std::cout << "resetting position..\n";
+
+    align_wall();
+
+    go::nav->driveDistance(-2);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+
+    drive_until_bumper(70);
+    std::cout << "first wall\n";
+
+    go::nav->driveDistance(-10);
+    go::nav->rotateBy(-M_PI_2);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+    msleep(800);
+
+    drive_until_bumper(70);
+    std::cout << "second wall\n";
+
+    go::nav->driveDistance(-12);
+    go::nav->rotateBy(-M_PI_2);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+    msleep(800);
+
+    go::nav->driveDistance(30);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+    go::arm->setWristSpeed(800);
+
+    // std::cout << "aligning to wall, current: " << go::dist->value() << ", target: " << AIMING_FOR_back_wall << std::endl;
+    // go::nav->disablePositionControl();
+    // go::nav->driveLeftSpeed(-70);
+    // go::nav->driveRightSpeed(-70);
+    // while (go::dist->value() < AIMING_FOR_back_wall) { msleep(20); }
+    // go::nav->driveLeftSpeed(0);
+    // go::nav->driveRightSpeed(0);
+    // go::nav->resetPositionControllers();
+    // go::nav->enablePositionControl();
+    
+
+    // go::nav->rotateBy(M_PI_2);
+    // go::nav->startSequence();
+    // go::nav->awaitSequenceComplete();
+
+    // go::nav->disablePositionControl();
+    // go::nav->driveLeftSpeed(70);
+    // go::nav->driveRightSpeed(70);
+    // for (;;)
+    // {
+    //     auto val = go::dist->value();
+    //     std::cout << "dist_value=" << val << std::endl;
+    //     if (val < AIMING_FOR_BACK)
+    //         break;
+    //     msleep(10);
+    // }
     // while (go::dist->value() > AIMING_FOR) { msleep(10); }
 
     go::nav->driveLeftSpeed(0);
     go::nav->driveRightSpeed(0);
     go::nav->resetPositionControllers();
     go::nav->enablePositionControl();
-
-    go::nav->rotateBy(-M_PI);
-
-    go::nav->startSequence();
-    go::nav->awaitSequenceComplete();
 
     go::balls->toDeck();
     go::balls->waitForMotor();
@@ -535,9 +580,9 @@ void balls_from_poms(bool from_botgal = false)
 
     go::nav->driveDistance(-20);
 
-    go::nav->rotateBy(M_PI_2);
-    go::nav->driveDistance(-13);
     go::nav->rotateBy(-M_PI_2);
+    go::nav->driveDistance(-5);
+    go::nav->rotateBy(M_PI_2);
 
     go::nav->driveDistance(-152);
     go::nav->startSequence();
@@ -583,7 +628,7 @@ void balls_from_poms(bool from_botgal = false)
 
     // wait for 60 seconds
     go::arm->moveEllbowTo(60);
-    go::arm->moveWristToRelativeAngle(30);
+    go::arm->moveWristToRelativeAngle(80);
     std::cout << "moving arm\n";
 
     go::arm->awaitAllDone();
@@ -609,7 +654,7 @@ void balls_from_poms(bool from_botgal = false)
     go::balls->toDeck();
 
     go::arm->moveWristToRelativeAngle(70);
-    go::arm->moveGripperTo(70);
+    // go::arm->moveGripperTo(70);
     go::arm->moveEllbowTo(40);
 
     go::nav->driveDistance(-20);
@@ -726,6 +771,7 @@ void wait_for_light(kipr::analog::Analog *light_sensor)
  */
 void direct_lower_cube()
 {
+    go::nav->setMotorSpeed(550);
     go::nav->setMotorSpeed(700);
 
     go::arm->setWristSpeed(2048);
@@ -750,42 +796,36 @@ void direct_lower_cube()
     go::arm->moveGripperTo(98);
     go::arm->awaitGripperDone();
     go::arm->moveWristToRelativeAngle(70);
-    msleep(1500);
+    msleep(500);
 
-    go::nav->driveDistance(-10);
-    go::nav->rotateBy(M_PI_2);
+    drive_until_bumper();
+
+    go::nav->rotateBy(M_PI_2 * .3);
+    go::nav->driveDistance(-40);
+    go::nav->rotateBy(M_PI_2 * .7);
     go::nav->startSequence();
-    go::nav->awaitSequenceComplete();
+
+    msleep(2000);
 
     // park botgal
     go::arm->moveShoulderTo(20);
-    go::arm->moveEllbowTo(40);
-    go::arm->moveWristToRelativeAngle(-80);
+    go::arm->moveEllbowTo(35);
+    go::arm->moveWristToRelativeAngle(-90);
 
-    go::nav->driveDistance(-160);
-    go::nav->startSequence();
     go::nav->awaitSequenceComplete();
 
-    std::cout << "aligning to wall, current: " << go::dist->value() << ", target: " << AIMING_FOR_back_wall << std::endl;
-
-    // align with back wall
-    go::nav->disablePositionControl();
-    go::nav->driveLeftSpeed(-70);
-    go::nav->driveRightSpeed(-70);
-    while (go::dist->value() < AIMING_FOR_back_wall) { msleep(20); }
-    go::nav->driveLeftSpeed(0);
-    go::nav->driveRightSpeed(0);
-    go::nav->resetPositionControllers();
-    go::nav->enablePositionControl();
-
-    // move to position    
+    go::nav->driveDistance(-150);
     go::nav->rotateBy(-M_PI_2);
-    go::nav->driveDistance(-40);
+    go::nav->driveDistance(-20);
+    go::nav->driveDistance(20);
     go::nav->startSequence();
     go::nav->awaitSequenceComplete();
+    go::arm->moveWristToRelativeAngle(90);
 
     go::nav->setMotorSpeed(500);
+
 }
+
 
 void drop_yellow()
 {
@@ -795,20 +835,29 @@ void drop_yellow()
 
     go::arm->moveWristToRelativeAngle(0);
     go::arm->moveEllbowTo(50);
-
     go::arm->awaitAllDone();
     go::arm->moveGripperTo(50);
-    }
+    go::arm->awaitAllDone();
+
+    go::nav->rotateBy(M_PI);
+    go::nav->driveDistance(-20);
+    go::nav->driveDistance(0);
+    go::nav->startSequence();
+    go::nav->awaitSequenceComplete();
+
+}
 
 
 void red_role()
 {
-    go::arm->unpark();
+    go::arm->moveWristToRelativeAngle(10);
+    go::arm->moveEllbowTo(20);
+    go::arm->moveGripperTo(0);
 
-    go::nav->rotateBy(M_PI);
     go::nav->driveDistance(20);
     go::nav->startSequence();
     go::nav->awaitSequenceComplete();
+    go::arm->awaitAllDone();
 }
 
 
@@ -890,6 +939,7 @@ int main()
     direct_lower_cube();
     balls_from_poms(true);
     drop_yellow();
+    red_role();
     
     go::arm->awaitAllDone();
 
